@@ -1,0 +1,14 @@
+aliases: []
+creation_timestamp: 1763729488172
+current_stage: Staging
+description: null
+last_updated_timestamp: 1763729498008
+name: lead_model
+run_id: 4746e9fa7d644990ae4d615b75a4c037
+run_link: null
+source: file:///c:/Users/mhm25/Desktop/ITU/5thSemester/MLOps%26SoftwareEngineering/itu-sdse-project-RGOFV/notebooks/mlruns/399687691614860619/4746e9fa7d644990ae4d615b75a4c037/artifacts/model
+status: READY
+status_message: null
+storage_location: file:///c:/Users/mhm25/Desktop/ITU/5thSemester/MLOps%26SoftwareEngineering/itu-sdse-project-RGOFV/notebooks/mlruns/399687691614860619/4746e9fa7d644990ae4d615b75a4c037/artifacts/model
+user_id: null
+version: 1

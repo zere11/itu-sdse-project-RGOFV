@@ -1,0 +1,15 @@
+artifact_uri: file:///c:/Users/mhm25/Desktop/ITU/5thSemester/MLOps%26SoftwareEngineering/itu-sdse-project-RGOFV/notebooks/mlruns/399687691614860619/1c0f2292925349a3b371c7c0a1e7543b/artifacts
+end_time: 1763729333256
+entry_point_name: ''
+experiment_id: '399687691614860619'
+lifecycle_stage: active
+run_id: 1c0f2292925349a3b371c7c0a1e7543b
+run_name: rumbling-shark-721
+run_uuid: 1c0f2292925349a3b371c7c0a1e7543b
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1763729331644
+status: 3
+tags: []
+user_id: mhm25
