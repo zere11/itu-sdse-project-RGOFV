@@ -51,7 +51,7 @@ def impute_missing_values(x, method="mean"):
 
 
 def data_extraction():
-    if "./artifacts/raw_data.csv" not in os.listdir("./artifacts"):
+    if "artifacts/raw_data.csv" not in os.listdir("artifacts"):
         print("DVC data not found locally. Pulling from remote storage...")
         try:
             result = subprocess.run(["dvc", "pull"], check=True, capture_output=True, text=True)
@@ -63,7 +63,7 @@ def data_extraction():
     else:
         print("DVC data found locally. No need to pull.")
     
-    data = pd.read_csv("./artifacts/raw_data.csv")
+    data = pd.read_csv("artifacts/raw_data.csv")
     return data
 
 def data_preparation(data, printing = False):

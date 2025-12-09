@@ -1,0 +1,15 @@
+artifact_uri: file:///C:/Users/andre/Downloads/itu-sdse-project-RGOFV/notebooks/mlruns/674200238995148720/67db6fa2901a4c80b286177b7b97cc34/artifacts
+end_time: 1765305068639
+entry_point_name: ''
+experiment_id: '674200238995148720'
+lifecycle_stage: active
+run_id: 67db6fa2901a4c80b286177b7b97cc34
+run_name: chill-bug-440
+run_uuid: 67db6fa2901a4c80b286177b7b97cc34
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1765305067627
+status: 3
+tags: []
+user_id: andre

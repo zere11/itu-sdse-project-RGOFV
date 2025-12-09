@@ -1,0 +1,15 @@
+artifact_uri: file:///C:/Users/andre/Downloads/itu-sdse-project-RGOFV/notebooks/mlruns/674200238995148720/5f71eeff191c43898c0c384edebc65be/artifacts
+end_time: 1765305567387
+entry_point_name: ''
+experiment_id: '674200238995148720'
+lifecycle_stage: active
+run_id: 5f71eeff191c43898c0c384edebc65be
+run_name: dashing-asp-25
+run_uuid: 5f71eeff191c43898c0c384edebc65be
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1765305566492
+status: 3
+tags: []
+user_id: andre
