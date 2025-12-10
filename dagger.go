@@ -132,6 +132,9 @@ EOF`,
 	// -----------------------------------------------------
 	// 2) mkdir structure
 	// -----------------------------------------------------
+	// Clean mlruns to avoid stale/corrupted local tracking data between runs
+	ctr = logExec("Reset mlruns store", ctr, []string{"sh", "-c", "rm -rf mlruns && mkdir -p mlruns/.trash"})
+
 	ctr = logExec("Creating dirs", ctr, []string{"sh", "-c", "mkdir -p artifacts notebooks/artifacts mlruns mlruns/.trash"})
 
 	// -----------------------------------------------------
