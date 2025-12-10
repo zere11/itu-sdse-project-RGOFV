@@ -54,45 +54,30 @@ def impute_missing_values(x, method="mean"):
 
 
 
+
 def data_extraction():
     """
-    Load data from multiple possible locations - works in IDE and container
+    Look for raw_data.csv without using DVC.
+    We run from /repo/notebooks, so the correct local path is:
+      - ./artifacts/raw_data.csv
+    Also allow:
+      - ../artifacts/raw_data.csv  (repo root artifacts)
+      - RAW_DATA_PATH env var (absolute override)
     """
-    # Try multiple possible locations
-    possible_paths = [
-        "artifacts/raw_data.csv",                    # Where script expects it
-        "notebooks/artifacts/raw_data.csv",          # Alternative location
-        "notebooks/artifacts/training_data.csv"      # Your actual file location
+    import os
+    import pandas as pd
+
+    cwd = os.getcwd()  # should be /repo/notebooks
+    candidates = [
+        os.path.join(cwd, "artifacts", "raw_data.csv"),                # ./artifacts/raw_data.csv
+        os.path.abspath(os.path.join(cwd, "..", "artifacts", "raw_data.csv")),  # ../artifacts/raw_data.csv
+        os.environ.get("RAW_DATA_PATH", ""),                           # optional absolute path
     ]
-    
-    for path in possible_paths:
-        if os.path.exists(path):
+
+    for path in candidates:
+        if path and os.path.exists(path):
             print(f"✓ Loading data from: {path}")
-            data = pd.read_csv(path)
-            return data
-    
-    # If no file found, try DVC as last resort
-    print("Data not found locally. Attempting DVC pull...")
-    try:
-        result = subprocess.run(["dvc", "pull"], check=True, capture_output=True, text=True)
-        print("DVC pull output:")
-        print(result.stdout)
-        data = pd.read_csv("artifacts/raw_data.csv")
-        return data
-    except subprocess.CalledProcessError as e:
-        print("Error during DVC pull:")
-        print(e.stderr)
-        raise FileNotFoundError(
-            f"Could not find data file in any of these locations:\n" + 
-            "\n".join(f"  - {p}" for p in possible_paths) +
-            "\n\nAnd DVC pull failed."
-        )
-    except FileNotFoundError:
-        raise FileNotFoundError(
-            f"Could not find data file in any of these locations:\n" + 
-            "\n".join(f"  - {p}" for p in possible_paths) +
-            "\n\nDVC is not installed and data file not found locally."
-        )
+            return pd.read_csv(path)
 
 def data_preparation(data, printing = False):
     '''
