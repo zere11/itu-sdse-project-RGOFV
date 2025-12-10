@@ -1,0 +1,111 @@
+name: ML Pipeline: Train & Validate Model
+
+on:
+  workflow_dispatch:
+
+jobs:
+  train_model:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Pull Code
+        uses: actions/checkout@v4
+
+      - name: Install Python 3.11.9
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11.9"
+
+      - name: Install Go 1.25.0
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.25.0"
+
+      - name: Install Dagger CLI v0.18.16
+        run: |
+          curl -fsSL https://dl.dagger.io/dagger/install.sh | sh
+          sudo mv ./bin/dagger /usr/local/bin/dagger
+          dagger version
+
+      - name: Verify Environment Versions
+        run: |
+          echo "Go Version:"; go version
+          echo "Python Version:"; python --version
+          echo "pip Version:"; pip --version
+          echo "Dagger Version:"; dagger version
+
+      - name: Run Dagger Pipeline
+        run: go run Dagger.go
+
+      - name: Install Python Dependencies for Model Conversion
+        run: |
+          pip install xgboost scikit-learn joblib
+
+      - name: Select Best Model and Prepare Artifact
+        run: |
+          python - << 'EOF'
+import json
+import os
+import shutil
+import joblib
+from xgboost import XGBRFClassifier
+
+# Load model results
+with open("artifacts/model_results.json") as f:
+    results = json.load(f)
+
+# Determine best model based on f1-score from macro avg
+def get_f1_score(model_results):
+    """Extract f1-score from classification report"""
+    if isinstance(model_results, dict):
+        # Try to get from macro avg first, then weighted avg
+        if "macro avg" in model_results and "f1-score" in model_results["macro avg"]:
+            return model_results["macro avg"]["f1-score"]
+        elif "weighted avg" in model_results and "f1-score" in model_results["weighted avg"]:
+            return model_results["weighted avg"]["f1-score"]
+        elif "f1-score" in model_results:
+            return model_results["f1-score"]
+    return 0.0
+
+best_model_path = max(results, key=lambda k: get_f1_score(results[k]))
+
+# Ensure model artifact has .pkl extension
+base_name = "model.pkl"
+if best_model_path.endswith(".json"):
+    # Load XGBoost model from JSON and convert to pickle
+    print(f"Loading XGBoost model from {best_model_path}...")
+    xgb_model = XGBRFClassifier()
+    xgb_model.load_model(best_model_path)
+    
+    # Save as proper pickle file using joblib
+    pickle_path = f"artifacts/{base_name}"
+    joblib.dump(xgb_model, pickle_path)
+    print(f"✓ Converted XGBoost JSON to pickle: {best_model_path} -> {pickle_path}")
+    
+    # Verify it can be loaded
+    loaded_model = joblib.load(pickle_path)
+    print(f"✓ Verified pickle file can be loaded with joblib.load()")
+else:
+    # Already a pickle file, just copy it
+    shutil.copy(best_model_path, f"artifacts/{base_name}")
+    print(f"Best model selected: {best_model_path} -> artifacts/{base_name}")
+EOF
+
+      - name: Upload Model Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: model
+          path: artifacts/model.pkl
+
+  test_model:
+    needs: train_model
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Pull Code
+        uses: actions/checkout@v4
+
+      - name: Run Inference Validation
+        uses: lasselundstenjensen/itu-sdse-project-model-validator@main
+        with:
+          model-path: artifacts/model.pkl
