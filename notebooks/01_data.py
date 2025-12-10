@@ -125,23 +125,21 @@ def data_preparation(data, printing = False):
     with open("./artifacts/date_limits.json", "w") as f:
         json.dump(date_limits, f)
 
-
-''' AS FAR AS I REMEMBER, ONLY CHANGE BETWEEN ORIGINAL 01_data.py AND THIS SCRIPT ARE THESE LINES
-    The original script was:
-    data = data.drop(
-        [
-            "is_active", "marketing_consent", "first_booking", "existing_customer", "last_seen"
-        ],
-        axis=1
-    )   
-    data = data.drop(
-        ["domain", "country", "visited_learn_more_before_booking", "visited_faq"],
-        axis=1
-    )
-    Therefore, below we have the same logic, but with the addition of checking if the columns exist
-    in the dataframe before dropping them to avoid keyerrors which was messing up dagger pipeline 
-    (although this doesn't affect the individual scripts if ran seperately without dagger)
-'''
+    # AS FAR AS I REMEMBER, ONLY CHANGE BETWEEN ORIGINAL 01_data.py AND THIS SCRIPT ARE THESE LINES
+    # The original script was:
+    # data = data.drop(
+    #     [
+    #         "is_active", "marketing_consent", "first_booking", "existing_customer", "last_seen"
+    #     ],
+    #     axis=1
+    # )   
+    # data = data.drop(
+    #     ["domain", "country", "visited_learn_more_before_booking", "visited_faq"],
+    #     axis=1
+    # )
+    # Therefore, below we have the same logic, but with the addition of checking if the columns exist
+    # in the dataframe before dropping them to avoid keyerrors which was messing up dagger pipeline 
+    # (although this doesn't affect the individual scripts if ran seperately without dagger)
     # Drop columns only if they exist
     cols_to_drop = ["is_active", "marketing_consent", "first_booking", "existing_customer", "last_seen"]
     cols_to_drop = [col for col in cols_to_drop if col in data.columns]
@@ -153,7 +151,7 @@ def data_preparation(data, printing = False):
     cols_to_drop2 = [col for col in cols_to_drop2 if col in data.columns]
     if cols_to_drop2:
         data = data.drop(cols_to_drop2, axis=1)
-''' END OF CHANGE '''
+    # END OF CHANGE
 
     #Remove rows with empty target variable
     #Remove rows with other invalid column data
