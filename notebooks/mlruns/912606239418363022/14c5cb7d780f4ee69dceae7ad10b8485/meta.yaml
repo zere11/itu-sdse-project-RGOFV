@@ -1,0 +1,15 @@
+artifact_uri: file:///C:/Users/andre/Downloads/itu-sdse-project-RGOFV/notebooks/mlruns/912606239418363022/14c5cb7d780f4ee69dceae7ad10b8485/artifacts
+end_time: 1765322051201
+entry_point_name: ''
+experiment_id: '912606239418363022'
+lifecycle_stage: active
+run_id: 14c5cb7d780f4ee69dceae7ad10b8485
+run_name: thundering-rat-587
+run_uuid: 14c5cb7d780f4ee69dceae7ad10b8485
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1765322047034
+status: 3
+tags: []
+user_id: andre

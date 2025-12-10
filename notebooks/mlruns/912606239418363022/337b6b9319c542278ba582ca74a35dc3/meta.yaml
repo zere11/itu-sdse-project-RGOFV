@@ -1,0 +1,15 @@
+artifact_uri: file:///C:/Users/andre/Downloads/itu-sdse-project-RGOFV/notebooks/mlruns/912606239418363022/337b6b9319c542278ba582ca74a35dc3/artifacts
+end_time: 1765322051201
+entry_point_name: ''
+experiment_id: '912606239418363022'
+lifecycle_stage: active
+run_id: 337b6b9319c542278ba582ca74a35dc3
+run_name: mercurial-fly-595
+run_uuid: 337b6b9319c542278ba582ca74a35dc3
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1765322047034
+status: 3
+tags: []
+user_id: andre

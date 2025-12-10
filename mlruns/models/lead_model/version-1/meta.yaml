@@ -1,0 +1,14 @@
+aliases: []
+creation_timestamp: 1765330801239
+current_stage: Staging
+description: null
+last_updated_timestamp: 1765330801246
+name: lead_model
+run_id: 75fd0ae0bff4488fbbdf4f33170f36fd
+run_link: null
+source: file:///workspace/mlruns/929780322834052538/75fd0ae0bff4488fbbdf4f33170f36fd/artifacts/model
+status: READY
+status_message: null
+storage_location: file:///workspace/mlruns/929780322834052538/75fd0ae0bff4488fbbdf4f33170f36fd/artifacts/model
+user_id: null
+version: 1

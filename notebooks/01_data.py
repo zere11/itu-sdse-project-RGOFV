@@ -6,13 +6,16 @@ import datetime
 import json
 import warnings
 import numpy as np
-from IPython.display import display
+#from IPython.display import display
 from pprint import pprint
 
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.model_selection import train_test_split, RandomizedSearchCV
 import joblib
 
+print("=== SCRIPT STARTED ===")
+print(f"Current directory: {os.getcwd()}")
+print(f"Files in current dir: {os.listdir('.')}")
 
 def describe_numeric_col(x):
     """
@@ -50,21 +53,46 @@ def impute_missing_values(x, method="mean"):
 
 
 
+
 def data_extraction():
-    if "artifacts/raw_data.csv" not in os.listdir("artifacts"):
-        print("DVC data not found locally. Pulling from remote storage...")
-        try:
-            result = subprocess.run(["dvc", "pull"], check=True, capture_output=True, text=True)
-            print("DVC pull output:")
-            print(result.stdout)
-        except subprocess.CalledProcessError as e:
-            print("Error during DVC pull:")
-            print(e.stderr)
-    else:
-        print("DVC data found locally. No need to pull.")
+    """
+    Load data from multiple possible locations - works in IDE and container
+    """
+    # Try multiple possible locations
+    possible_paths = [
+        "artifacts/raw_data.csv",                    # Where script expects it
+        "notebooks/artifacts/raw_data.csv",          # Alternative location
+        "notebooks/artifacts/training_data.csv"      # Your actual file location
+    ]
     
-    data = pd.read_csv("artifacts/raw_data.csv")
-    return data
+    for path in possible_paths:
+        if os.path.exists(path):
+            print(f"✓ Loading data from: {path}")
+            data = pd.read_csv(path)
+            return data
+    
+    # If no file found, try DVC as last resort
+    print("Data not found locally. Attempting DVC pull...")
+    try:
+        result = subprocess.run(["dvc", "pull"], check=True, capture_output=True, text=True)
+        print("DVC pull output:")
+        print(result.stdout)
+        data = pd.read_csv("artifacts/raw_data.csv")
+        return data
+    except subprocess.CalledProcessError as e:
+        print("Error during DVC pull:")
+        print(e.stderr)
+        raise FileNotFoundError(
+            f"Could not find data file in any of these locations:\n" + 
+            "\n".join(f"  - {p}" for p in possible_paths) +
+            "\n\nAnd DVC pull failed."
+        )
+    except FileNotFoundError:
+        raise FileNotFoundError(
+            f"Could not find data file in any of these locations:\n" + 
+            "\n".join(f"  - {p}" for p in possible_paths) +
+            "\n\nDVC is not installed and data file not found locally."
+        )
 
 def data_preparation(data, printing = False):
     '''
@@ -97,18 +125,17 @@ def data_preparation(data, printing = False):
     with open("./artifacts/date_limits.json", "w") as f:
         json.dump(date_limits, f)
 
-    data = data.drop(
-        [
-            "is_active", "marketing_consent", "first_booking", "existing_customer", "last_seen"
-        ],
-        axis=1
-    )   
+    # Drop columns only if they exist
+    cols_to_drop = ["is_active", "marketing_consent", "first_booking", "existing_customer", "last_seen"]
+    cols_to_drop = [col for col in cols_to_drop if col in data.columns]
+    if cols_to_drop:
+        data = data.drop(cols_to_drop, axis=1)
 
     #Removing columns that will be added back after the EDA (MATTI: Don't think this is ever used again..? )
-    data = data.drop(
-        ["domain", "country", "visited_learn_more_before_booking", "visited_faq"],
-        axis=1
-    )
+    cols_to_drop2 = ["domain", "country", "visited_learn_more_before_booking", "visited_faq"]
+    cols_to_drop2 = [col for col in cols_to_drop2 if col in data.columns]
+    if cols_to_drop2:
+        data = data.drop(cols_to_drop2, axis=1)
 
 
     #Remove rows with empty target variable
@@ -242,7 +269,7 @@ def data_analysis(data):
     '''
 
     print("Total rows:", data.count())
-    display(data.head(5))
+    #print(data.head(5))
 
 
 

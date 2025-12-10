@@ -1,0 +1,15 @@
+artifact_uri: file:///C:/Users/andre/Downloads/itu-sdse-project-RGOFV/notebooks/mlruns/912606239418363022/d8348c1b1f9c49f89e3ad661f93e3ddf/artifacts
+end_time: 1765322051201
+entry_point_name: ''
+experiment_id: '912606239418363022'
+lifecycle_stage: active
+run_id: d8348c1b1f9c49f89e3ad661f93e3ddf
+run_name: clumsy-auk-371
+run_uuid: d8348c1b1f9c49f89e3ad661f93e3ddf
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1765322047034
+status: 3
+tags: []
+user_id: andre
