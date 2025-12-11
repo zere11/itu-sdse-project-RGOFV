@@ -69,4 +69,5 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Run Model Inference Test Action
-        uses: lasselundstenjensen/itu-sdse-project-model-validator
+        uses: lasselundstenjensen/itu-sdse-project-model-validator@main
+
