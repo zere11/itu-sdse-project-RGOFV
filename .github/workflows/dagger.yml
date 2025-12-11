@@ -1,30 +1,72 @@
-name: Run Dagger pipeline
+name: Run Dagger Pipeline
 
 on:
+  workflow_dispatch:
   push:
     branches:
-      - main
-  workflow_dispatch:
+      - dagger
 
 jobs:
-  dagger:
-    name: Run Dagger pipeline
+  train:
+    name: Train model with Dagger
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Set up Go
-        uses: actions/setup-go@v6
+      - name: Setup Go
+        uses: actions/setup-go@v5
         with:
-          go-version: 1.25.4
+          go-version: '1.25.4'
           cache: false
 
-      - name: Run Dagger pipeline
-        uses: dagger/dagger-for-github@v8.2.0
+      - name: Install Dagger CLI
+        run: |
+          curl -fsSL https://dl.dagger.io/dagger/install.sh | sh
+          sudo mv ./bin/dagger /usr/local/bin/dagger
+          dagger version
+
+      - name: List notebooks artifacts
+        run: |
+          ls -al notebooks || true
+          ls -al notebooks/artifacts || true
+
+      - name: Run Makefile
+        if: ${{ hashFiles('Makefile') != '' }}
+        run: make
+
+      - name: Run training pipeline
+        run: dagger run go run ./pipeline.go
+
+      - name: Rename model
+        run: |
+          ls -al artifacts || true
+          test -f artifacts/lead_model_lr.pkl || (echo "Model not found: artifacts/lead_model_lr.pkl" && exit 1)
+          cp artifacts/lead_model_lr.pkl artifacts/model.pkl
+          ls -al artifacts
+
+      - name: Upload Trained Model Artifact
+        uses: actions/upload-artifact@v4
         with:
-          workdir: go
-          verb: run
-          args: dagger run go run pipeline.go
-          version: "0.19.6"
+          name: model
+          path: artifacts/model.pkl
+
+      - name: Upload MLflow runs
+        if: ${{ hashFiles('mlruns/**') != '' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: mlruns
+          path: mlruns
+
+  test:
+    name: Validate trained model
+    needs: train
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Run Model Inference Test Action
+        uses: lasselundstenjensen/itu-sdse-project-model-validator
