@@ -1,10 +1,10 @@
 name: Run Dagger Pipeline
 
 on:
-  workflow_dispatch:
   push:
     branches:
-      - dagger
+      - main
+      - workflow-fix
 
 jobs:
   train:
