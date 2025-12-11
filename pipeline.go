@@ -53,9 +53,6 @@ func Build(ctx context.Context) error {
 		WithWorkdir("/repo/notebooks").
 		WithExec([]string{"python", "--version"})
 
-	// Optional: quick ls for layout sanity (comment/remove once verified)
-	// base = base.WithExec([]string{"bash", "-lc", "pwd && ls -al"})
-
 	if _, err := base.Stdout(ctx); err != nil {
 		return err
 	}
