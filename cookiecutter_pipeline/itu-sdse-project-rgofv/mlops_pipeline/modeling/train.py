@@ -8,7 +8,7 @@ import mlflow
 import json
 
 from mlops_pipeline.config import MODELS_DIR, PROCESSED_DATA_DIR, INTERIM_DATA_DIR
-from mlops_pipeline.modeling.xgboost import train_xgboost_model
+from mlops_pipeline.modeling.xgboost_rf import train_xgboost_model
 
 
 # We have the MLFlow pipeline saved in mlflow_utils. Let's import:
@@ -24,7 +24,7 @@ def _load_X_y(X_path: Path, y_path: Path):
     Assumes index is in column 0; adjust index_col as needed.
     """
     X = pd.read_csv(X_path, index_col=0)
-    y_df = pd.read_csv(y_path, index_col=0)
+    y_df = pd.read_csv(y_path, index_col=None)
 
     if y_df.shape[1] != 1:
         raise ValueError(f"{y_path} must have exactly 1 column, got {y_df.shape[1]}")
@@ -138,12 +138,21 @@ def main(
         mlflow.log_artifact(str(report_test_path), artifact_path="metrics")
 
 
+        # ---- (Optional) Register model in MLflow Model Registry ----
+        if register:
+            # We registered the ARTIFACT path where we logged the model JSON under this run:
+            #   runs:/<run_id>/model/lead_model_xgboost.json
+            # Your helper expects the artifact_path relative to the run root:
+            artifact_rel_path = f"model/{xgboost_json_path}"
+            version = register_model(artifact_rel_path, model_name)
+            logger.info(f"Requested registration: {model_name} v{version}")
 
-        # Wait for registry to finish materializing the model
-        ready = wait_until_ready(model_name, version, retries=20, sleep_seconds=1.0, raise_on_fail=True)
-        if ready:
-            transition_stage(model_name, version, stage=stage, archive_existing=True)
-            logger.success(f"Model {model_name} v{version} transitioned to stage: {stage}")
+
+            # Wait for registry to finish materializing the model
+            ready = wait_until_ready(model_name, version, retries=20, sleep_seconds=1.0, raise_on_fail=True)
+            if ready:
+                transition_stage(model_name, version, stage=stage, archive_existing=True)
+                logger.success(f"Model {model_name} v{version} transitioned to stage: {stage}")
 
 
 
