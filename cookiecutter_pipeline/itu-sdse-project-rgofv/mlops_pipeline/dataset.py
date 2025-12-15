@@ -4,7 +4,7 @@ from loguru import logger
 from tqdm import tqdm
 import typer
 
-from mlops_pipeline.config import PROCESSED_DATA_DIR, RAW_DATA_DIR, INTERIM_DATA_DIR, PRINTING_STATE
+from mlops_pipeline.config import PROCESSED_DATA_DIR, RAW_DATA_DIR, INTERIM_DATA_DIR, PRINTING_STATE, BASE_DATA
 from mlops_pipeline.data.make_dataset import make_dataset
 
 data_app = typer.Typer(help="Initial command for taking raw dataset and cleaning it, making it ready for feature building.")
@@ -13,7 +13,7 @@ data_app = typer.Typer(help="Initial command for taking raw dataset and cleaning
 @data_app.command("data_init")
 def data_init(
     raw: Path = typer.Option(
-        RAW_DATA_DIR / "raw_data.csv",
+        BASE_DATA / "raw_data.csv",
         help="Sets the path to the raw_data.csv. Default is in data/raw",
         exists=True,
         readable=True,
