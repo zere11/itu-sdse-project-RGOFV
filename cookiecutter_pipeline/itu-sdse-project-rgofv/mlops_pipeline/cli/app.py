@@ -6,11 +6,84 @@ from loguru import logger
 from mlops_pipeline.data.prepare import load_and_prepare_data
 from mlops_pipeline.features_cli import feature_app
 from mlops_pipeline.dataset import data_app
-from mlops_pipeline.config import RAW_DATA_DIR, INTERIM_DATA_DIR, PROCESSED_DATA_DIR, EXTERNAL_DATA_DIR, PRINTING_STATE, MODELS_DIR
+from mlops_pipeline.config import RAW_DATA_DIR, INTERIM_DATA_DIR, PROCESSED_DATA_DIR, EXTERNAL_DATA_DIR, PRINTING_STATE, MODELS_DIR, BASE_DATA
+from mlops_pipeline.data.make_dataset import make_dataset
+from mlops_pipeline.features.build_features import build_features
 
 app = typer.Typer(help="Hi, and welcome to the RGoFV MLOps app! We are happy to see you here. \n This is a combined MLOps pipeline CLI. Commands are listed in order of operation.")
-app.add_typer(data_app, name="data")
+#app.add_typer(data_app, name="data")
 app.add_typer(feature_app, name="features")
+
+
+@app.command("data")
+def data(
+    raw: Path = typer.Option(
+        BASE_DATA / "raw_data.csv",
+        help="Sets the path to the raw_data.csv. Default is in data/raw",
+        exists=True,
+        readable=True,
+    ),
+    out: Path = typer.Option(
+        INTERIM_DATA_DIR / "training_data.csv",
+        help="Sets the path for the output of the data cleaning. Default is in data/interim",
+    ),
+    mindate: str = typer.Option(
+        "2024-01-01",
+        help="Sets the minimum date to be handled (Using format YYYY-MM-DD). Must be defined. Default is 2024-01-01",
+    ),
+    maxdate: str = typer.Option(
+        "2024-01-31",
+        help="Sets the maximum date to be handled (Using format YYYY-MM-DD). Defaults to 2024-01-31, but if explicitly undefined, max will be set to the latest date in raw_data.csv",
+    ),
+    printing_bool: bool = typer.Option(
+        PRINTING_STATE,
+        help="Sets the printing state for logger, to see which parts are running. Default set by flag in mlops_pipeline/config.py as False. If called by --printing, will be set to true.",
+    ),
+
+):
+    '''
+    Prepares and makes the dataset for feature building from the raw_data.csv
+    '''
+    logger.info("Converting the raw data...")
+    make_dataset(
+        raw_csv_path=raw,
+        out_training_csv_path=out,
+        min_date=mindate,
+        max_date=maxdate,
+        printing=printing_bool,
+    )
+    logger.success(f"Raw data has been converted and saved at {out}.")
+
+
+
+@app.command("build")
+def build_features_cli(
+    interim: Path = typer.Option(
+        INTERIM_DATA_DIR / "training_data.csv",
+        help="Sets a pathlib Path to the cleaned dataset. Defaults to data/interim/training_data.csv",
+        exists=True,
+        readable=True,
+    ),
+    out: Path = typer.Option(
+        PROCESSED_DATA_DIR / "training_features_gold.csv",
+        help="Sets a pathlib Path for the outputted scaled feature dataset. Defaults to data/processed/training_features_gold.csv",
+    ),
+    printing_bool: bool = typer.Option(
+        PRINTING_STATE,
+        help="Sets the printing state for logger, to see which parts are running. Default set by flag in mlops_pipeline/config.py as False. If called by --printing, will be set to true.",
+    ),
+):
+    '''
+    Takes cleaned data from data/make_dataset.py and outputs the processed csv.
+    '''
+    logger.info("Building the features...")
+    build_features(
+        training_csv_path=interim,
+        out_processed_csv_path=out,
+        printing=printing_bool,
+    )
+    logger.success(f"Features have been written to {out}.")
+
 
 @app.command("prepare")
 def prepare(
@@ -52,6 +125,8 @@ def prepare(
     )
     logger.success(f"Split train/test-files have been created at {data_out_dir}.")
     logger.success(f"The MinMaxScaler has been pickled and saved at {scaler}.")
+
+
 
 if __name__ == "__main__":
     app()
