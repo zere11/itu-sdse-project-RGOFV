@@ -9,6 +9,7 @@ import json
 
 from mlops_pipeline.config import MODELS_DIR, PROCESSED_DATA_DIR, INTERIM_DATA_DIR
 from mlops_pipeline.modeling.xgboost_rf import train_xgboost_model
+from mlops_pipeline.modeling.logreg import train_logreg_model
 
 
 # We have the MLFlow pipeline saved in mlflow_utils. Let's import:
@@ -50,6 +51,9 @@ def main(
     # Paths to save the models
     xgboost_pkl_path: Path = MODELS_DIR / "lead_model_xgboost.pkl",
     xgboost_json_path: Path = MODELS_DIR / "lead_model_xgboost.json",
+    logreg_pkl_path: Path = MODELS_DIR / "lead_model_logreg.pkl",
+
+
 
     # Trainer parameters
     random_state: int = 42,
@@ -137,6 +141,67 @@ def main(
         report_test_path.write_text(json.dumps(report_test, indent=2))
         mlflow.log_artifact(str(report_test_path), artifact_path="metrics")
 
+                # ==================================
+        # Logistic Regression Training
+        # ==================================
+        logger.info("Training Logistic Regression (randomized search)...")
+
+        model_path_lr, model_results_lr, best_model_lr = train_logreg_model(
+            X_train=X_train,
+            X_test=X_test,
+            y_train=y_train,
+            y_test=y_test,
+            logreg_model_path=logreg_pkl_path,
+            random_state=random_state,
+            printing=printing_bool,
+        )
+
+        # Log model artifacts
+        mlflow.log_artifact(str(logreg_pkl_path), artifact_path="model")
+
+        # Train classification report (mirrors XGBoost logic)
+        report_lr_train = next(iter(model_results_lr.values()))
+        report_lr_train_path = MODELS_DIR / "classification_report_logreg_train.json"
+        report_lr_train_path.write_text(
+            json.dumps(report_lr_train, indent=2)
+        )
+        mlflow.log_artifact(
+            str(report_lr_train_path),
+            artifact_path="metrics",
+        )
+
+        # Test predictions
+        y_pred_test = best_model_lr.predict(X_test)
+        y_proba_test = best_model_lr.predict_proba(X_test)[:, 1]
+
+        metrics_test = {
+            "logreg_accuracy": float(
+                accuracy_score(y_test, y_pred_test)
+            ),
+            "logreg_average_precision": float(
+                average_precision_score(y_test, y_proba_test)
+            ),
+            "logreg_roc_auc": float(
+                roc_auc_score(y_test, y_proba_test)
+            ),
+        }
+
+        log_metrics(metrics_test)
+
+        # Test classification report
+        report_lr_test = classification_report(
+            y_test, y_pred_test, output_dict=True
+        )
+        report_lr_test_path = MODELS_DIR / "classification_report_logreg_test.json"
+        report_lr_test_path.write_text(
+            json.dumps(report_lr_test, indent=2)
+        )
+        mlflow.log_artifact(
+            str(report_lr_test_path),
+            artifact_path="metrics",
+        )
+
+
 
         # ---- (Optional) Register model in MLflow Model Registry ----
         if register:
@@ -159,6 +224,7 @@ def main(
 
     logger.success(f"Saved scikit-learn wrapper to: {xgboost_pkl_path}")
     logger.success(f"Saved native XGBoost Booster JSON to: {xgboost_json_path}")
+    logger.success(f"Saved Logistic Regression model to: {logreg_pkl_path}")
 
 
 
