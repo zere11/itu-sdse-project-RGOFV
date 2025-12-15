@@ -1,6 +1,7 @@
 import typer
 from pathlib import Path
 from loguru import logger
+import subprocess
 
 
 from mlops_pipeline.data.prepare import load_and_prepare_data
@@ -12,15 +13,14 @@ from mlops_pipeline.features.build_features import build_features
 
 app = typer.Typer(help="Hi, and welcome to the RGoFV MLOps app! We are happy to see you here. \n This is a combined MLOps pipeline CLI. Commands are listed in order of operation.")
 #app.add_typer(data_app, name="data")
-app.add_typer(feature_app, name="features")
-
+#app.add_typer(feature_app, name="features")
 
 @app.command("data")
 def data(
     raw: Path = typer.Option(
         BASE_DATA / "raw_data.csv",
         help="Sets the path to the raw_data.csv. Default is in data/raw",
-        exists=True,
+        #exists=True,
         readable=True,
     ),
     out: Path = typer.Option(
@@ -44,6 +44,11 @@ def data(
     '''
     Prepares and makes the dataset for feature building from the raw_data.csv
     '''
+    subprocess.run(
+        ["dvc", "pull"],
+        check=True,
+        cwd=BASE_DATA
+    )
     logger.info("Converting the raw data...")
     make_dataset(
         raw_csv_path=raw,
