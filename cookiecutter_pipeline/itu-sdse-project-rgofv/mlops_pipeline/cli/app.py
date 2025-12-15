@@ -6,7 +6,7 @@ from loguru import logger
 from mlops_pipeline.data.prepare import load_and_prepare_data
 from mlops_pipeline.features_cli import feature_app
 from mlops_pipeline.dataset import data_app
-from mlops_pipeline.config import RAW_DATA_DIR, INTERIM_DATA_DIR, PROCESSED_DATA_DIR, EXTERNAL_DATA_DIR, PRINTING_STATE
+from mlops_pipeline.config import RAW_DATA_DIR, INTERIM_DATA_DIR, PROCESSED_DATA_DIR, EXTERNAL_DATA_DIR, PRINTING_STATE, MODELS_DIR
 
 app = typer.Typer(help="Hi, and welcome to the RGoFV MLOps app! We are happy to see you here. \n This is a combined MLOps pipeline CLI. Commands are listed in order of operation.")
 app.add_typer(data_app, name="data")
@@ -20,6 +20,10 @@ def prepare(
     data_out_dir: Path = typer.Option(
         INTERIM_DATA_DIR,
         help="Directory to write the X/y train/test to. Defaults to data/interim.",
+    ),
+    scaler: Path = typer.Option(
+        MODELS_DIR / "scaler.pkl",
+        help="Sets a pathlib Path for saving the pickled MinMaxScaler, as trained on the training_data.csv. Defaults to models/scaler.pkl",
     ),
     testing_size: float = typer.Option(
         0.15,
@@ -41,11 +45,13 @@ def prepare(
     load_and_prepare_data(
         data_gold_path=data_gold_path,
         out_dir=data_out_dir,
+        scaler_path=scaler,
         test_size=testing_size,
         random_state=random_state_set,
         printing=printing_state,
     )
     logger.success(f"Split train/test-files have been created at {data_out_dir}.")
+    logger.success(f"The MinMaxScaler has been pickled and saved at {scaler}.")
 
 if __name__ == "__main__":
     app()

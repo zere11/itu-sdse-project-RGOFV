@@ -6,7 +6,7 @@ import typer
 from mlops_pipeline.config import PROCESSED_DATA_DIR, INTERIM_DATA_DIR, MODELS_DIR, PRINTING_STATE
 from mlops_pipeline.features.build_features import build_features
 
-feature_app = typer.Typer(help="Feature engineering for handling importing and making scaler.")
+feature_app = typer.Typer(help="Feature engineering for handling importing and exporting a csv.")
 
 # Let's define the CLI for doing the feature building (second part of 01_data.py)
 @feature_app.command("build")
@@ -21,26 +21,21 @@ def build_features_cli(
         PROCESSED_DATA_DIR / "training_features_gold.csv",
         help="Sets a pathlib Path for the outputted scaled feature dataset. Defaults to data/processed/training_features_gold.csv",
     ),
-    scaler: Path = typer.Option(
-        MODELS_DIR / "scaler.pkl",
-        help="Sets a pathlib Path for saving the pickled Scaler, as trained on the training_data.csv. Defaults to models/scaler.pkl",
-    ),
     printing_bool: bool = typer.Option(
         PRINTING_STATE,
         help="Sets the printing state for logger, to see which parts are running. Default set by flag in mlops_pipeline/config.py as False. If called by --printing, will be set to true.",
     ),
 ):
     '''
-    Takes cleaned data from data/make_dataset.py and creates the pickled Scaler model and outputs the processed csv.
+    Takes cleaned data from data/make_dataset.py and outputs the processed csv.
     '''
     logger.info("Building the features...")
     build_features(
         training_csv_path=interim,
         out_processed_csv_path=out,
-        scaler_path=scaler,
         printing=printing_bool,
     )
-    logger.success(f"Features have been written to {out},\n and the scaler has been saved to {scaler}")
+    logger.success(f"Features have been written to {out}.")
 
 
 

@@ -10,23 +10,13 @@ from loguru import logger
 from sklearn.preprocessing import MinMaxScaler
 from mlops_pipeline.config import INTERIM_DATA_DIR, PROCESSED_DATA_DIR, MODELS_DIR, PRINTING_STATE
 
-def build_features(training_csv_path: Path, out_processed_csv_path: Path, scaler_path: Path, printing: bool = PRINTING_STATE) -> None:
+def build_features(training_csv_path: Path, out_processed_csv_path: Path, printing: bool = PRINTING_STATE) -> None:
     df = pd.read_csv(training_csv_path)
 
     cont = df.select_dtypes(include=[np.number]).copy()
     cat = df.select_dtypes(include=["object"]).copy()
 
-    # We have to split into train and test before we do the scaling (otherwise we have leakage)
-    
-
-    # fit & save scaler
-    scaler = MinMaxScaler().fit(cont)
-    scaler_path.parent.mkdir(parents=True, exist_ok=True)
-    joblib.dump(scaler, scaler_path)
-
-    cont_scaled = pd.DataFrame(scaler.transform(cont), columns=cont.columns, index=cont.index)
-
-    df_feat = pd.concat([cat, cont_scaled], axis=1)
+    df_feat = pd.concat([cat, cont], axis=1)
 
     # binning
     mapping = {"li": "socials", "fb": "socials", "organic": "group1", "signup": "group1"}

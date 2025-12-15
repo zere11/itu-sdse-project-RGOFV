@@ -25,6 +25,7 @@ from mlflow.entities.model_registry.model_version_status import ModelVersionStat
 from mlflow.tracking import MlflowClient
 import matplotlib.pyplot as plt
 import time
+import shutil
 
 def wait_until_ready(model_name, model_version):
     client = MlflowClient()
@@ -141,7 +142,7 @@ def train_xgboost_model(X_train, X_test, y_train, y_test, printing=False):
         xgboost_model_path: classification_report(y_train, y_pred_train, output_dict=True)
     }
 
-    return xgboost_model_path, model_results
+    return xgboost_model_path, model_results, xgboost_model
 
 
 class lr_wrapper(mlflow.pyfunc.PythonModel):
@@ -177,9 +178,9 @@ def train_logistic_regression_model(X_train, X_test, y_train, y_test, experiment
         mlflow.log_artifacts("artifacts", artifact_path="model")
         mlflow.log_param("data_version", data_version)
         
-        joblib.dump(value=model, filename=lr_model_path)
+        joblib.dump(value=best_model, filename=lr_model_path)
             
-        mlflow.pyfunc.log_model('model', python_model=lr_wrapper(model))
+        mlflow.pyfunc.log_model('model', python_model=lr_wrapper(best_model))
 
     model_classification_report = classification_report(y_test, y_pred_test, output_dict=True)
 
@@ -206,7 +207,7 @@ def train_logistic_regression_model(X_train, X_test, y_train, y_test, experiment
 
         print(model_classification_report["weighted avg"]["f1-score"])
 
-    return lr_model_path, model_classification_report
+    return lr_model_path, model_classification_report, best_model
 
 
 def save_artifacts(X_train, model_results, printing=False):
@@ -244,6 +245,31 @@ def get_results(experiment_name, printing=False):
     best_model = results_df.sort_values("f1-score", ascending=False).iloc[0].name
     print(f"Model outputs: {results_df} \nBest model: {best_model}")
     return best_model, experiment_best
+
+def save_best_model(best_model_path, xgboost_model, lr_model, printing=False):
+    """
+    Save the best performing model as model.pkl
+    
+    Args:
+        best_model_path: Path to the best model (either .json or .pkl)
+        xgboost_model: Trained XGBoost model object
+        lr_model: Trained Logistic Regression model object
+        printing: Whether to print status messages
+    """
+    output_path = "./artifacts/model.pkl"
+    
+    if "xgboost" in best_model_path:
+        # Save XGBoost model as pickle
+        joblib.dump(xgboost_model, output_path)
+        if printing:
+            print(f"Saved best model (XGBoost) to {output_path}")
+    else:
+        # Copy LR model (already in pickle format)
+        shutil.copy(best_model_path, output_path)
+        if printing:
+            print(f"Saved best model (Logistic Regression) to {output_path}")
+    
+    return output_path
 
 def get_model_version(model_name, experiment_best, artifact_path, client, printing=False):
     prod_model = [model for model in client.search_model_versions(f"name='{model_name}'") if dict(model)['current_stage']=='Production']
@@ -338,20 +364,14 @@ def main():
 
     mlflow.set_experiment(experiment_name)
 
-
-
-
-
-
-
     warnings.filterwarnings('ignore')
     pd.set_option('display.float_format', lambda x: "%.3f" % x)
 
     X_train, X_test, y_train, y_test = load_and_prepare_data(data_gold_path, printing=True)
 
-    xgboost_model_path, xgb_report = train_xgboost_model(X_train, X_test, y_train, y_test, printing=True)
+    xgboost_model_path, xgb_report, xgboost_model = train_xgboost_model(X_train, X_test, y_train, y_test, printing=True)
 
-    lr_model_path, lr_report = train_logistic_regression_model(
+    lr_model_path, lr_report, lr_model = train_logistic_regression_model(
         X_train, X_test, y_train, y_test, experiment_name, data_version, printing=True
     )
     
@@ -360,12 +380,14 @@ def main():
         lr_model_path: lr_report
     }
 
-
     save_artifacts(X_train, model_results, printing=True)
 
     print("Model training completed.")
 
     best_model, experiment_best = get_results(experiment_name, printing=True)
+
+    # Save the best performing model as model.pkl which is needed for the the model validator 
+    best_model_pkl_path = save_best_model(best_model, xgboost_model, lr_model, printing=True)
 
     runid = get_model_version(model_name, experiment_best, artifact_path, client, printing=True)
 
