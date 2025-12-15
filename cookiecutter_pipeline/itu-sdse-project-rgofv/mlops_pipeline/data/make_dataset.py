@@ -68,7 +68,7 @@ def make_dataset(raw_csv_path: Path, out_training_csv_path: Path, min_date: str,
     logger.info(f"Reading raw data: {raw_csv_path}")
     df = pd.read_csv(raw_csv_path)
 
-    # date filtering
+    # Apply the date filtering
     if "date_part" in df.columns:
         df["date_part"] = pd.to_datetime(df["date_part"]).dt.date
         min_d = pd.to_datetime(min_date).date()
@@ -121,6 +121,9 @@ def make_dataset(raw_csv_path: Path, out_training_csv_path: Path, min_date: str,
     if printing:
         logger.info(f"Interim saved: {out_training_csv_path} (rows={len(df_clean)}, cols={df_clean.shape[1]})")
 
+'''
+    DEPRECATED MAIN FUNCTIONALITY (now we deal with these scripts as modules)
+
 def main():
     # We use the parser here so that code can be configurable from the terminal. Defaults set as we have them in the original script.
     parser = argparse.ArgumentParser(description="Prepares and makes the dataset for feature building from the raw_data.csv")
@@ -134,195 +137,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+'''
 
-
-
-
-# OLD FUNCTIONS - weave into the above
-def data_extraction():
-    '''
-    Quick pointer to the raw data in the top level data folder. DVC functionality has been deprecated, but can be found in the original 01_data.py script.
-
-    Output:
-        data - A pandas dataframe of the raw dataset.
-    '''
-    
-    # Removed earlier code for dvc functionality, as it requires a proper storage environment (Azure, etc)
-    # The file is located directly in the raw folder under data.
-    
-    raw_path = RAW_DATA_DIR / "raw_data.csv"
-    data = pd.read_csv(raw_path)
-    return data
-
-
-def data_preparation(data, printing = PRINTING_STATE):
-    '''
-    Data preparation step.
-
-    Input:
-        data -      The raw data csv, as read by data_extraction.
-        printing -  Set to True to enable printing
-    
-    Output:
-
-    '''
-    # We set the dates for the data we want.
-    max_date = "2024-01-31"
-    min_date = "2024-01-01"
-
-    # If not set, max_date is set to the present day.
-    if not max_date:
-        max_date = pd.to_datetime(datetime.datetime.now().date()).date()
-    else:
-        max_date = pd.to_datetime(max_date).date()
-
-    min_date = pd.to_datetime(min_date).date()
-
-    # Apply time limit to data
-    data["date_part"] = pd.to_datetime(data["date_part"]).dt.date
-    data = data[(data["date_part"] >= min_date) & (data["date_part"] <= max_date)]
-
-    # We update the min and max dates to correspond to dates present in the dataset. For good measure, we dump the date limits in a json.
-    min_date = data["date_part"].min()
-    max_date = data["date_part"].max()
-    date_limits = {"min_date": str(min_date), "max_date": str(max_date)}
-
-    date_limit_path = INTERIM_DATA_DIR / "date_limits.json"
-    with open(date_limit_path, "w") as f:
-        json.dump(date_limits, f)
-
-    data = data.drop(
-        [
-            "is_active", "marketing_consent", "first_booking", "existing_customer", "last_seen"
-        ],
-        axis=1
-    )   
-
-    #Removing columns that will be added back after the EDA (MATTI: Don't think this is ever used again..? )
-    data = data.drop(
-        ["domain", "country", "visited_learn_more_before_booking", "visited_faq"],
-        axis=1
-    )
-
-
-    #Remove rows with empty target variable
-    #Remove rows with other invalid column data
-    data["lead_indicator"].replace("", np.nan, inplace=True)
-    data["lead_id"].replace("", np.nan, inplace=True)
-    data["customer_code"].replace("", np.nan, inplace=True)
-
-    data = data.dropna(axis=0, subset=["lead_indicator"])
-    data = data.dropna(axis=0, subset=["lead_id"])
-
-    data = data[data.source == "signup"]
-    result=data.lead_indicator.value_counts(normalize = True)
-
-    if printing:
-        print("Target value counter")
-        for val, n in zip(result.index, result):
-            print(val, ": ", n)
-        print(data)
-
-
-    vars = [
-        "lead_id", "lead_indicator", "customer_group", "onboarding", "source", "customer_code"
-    ]
-
-    for col in vars:
-        data[col] = data[col].astype("object")
-        if printing:
-           print(f"Changed {col} to object type")
-
-    
-    # Separate categorical and continuous columns
-    cont_vars = data.loc[:, ((data.dtypes=="float64")|(data.dtypes=="int64"))]
-    cat_vars = data.loc[:, (data.dtypes=="object")]
-
-    if printing:
-        print("\nContinuous columns: \n")
-        pprint(list(cont_vars.columns), indent=4)
-        print("\n Categorical columns: \n")
-        pprint(list(cat_vars.columns), indent=4)
-
-
-    ## NOW TO HANDLE THE OUTLIERS/NaN
-    # Outliers:
-    cont_vars = cont_vars.apply(lambda x: x.clip(lower = (x.mean()-2*x.std()),
-                                             upper = (x.mean()+2*x.std())))
-    outlier_summary = cont_vars.apply(describe_numeric_col).T
-    outlier_summary_path = INTERIM_DATA_DIR / "outlier_summary.csv"
-    outlier_summary.to_csv(outlier_summary_path)
-    if printing:
-        outlier_summary
-
-    # Missing values:
-    cat_missing_impute = cat_vars.mode(numeric_only=False, dropna=True)
-    cat_missing_impute_path = INTERIM_DATA_DIR / "cat_missing_impute.csv"
-    cat_missing_impute.to_csv(cat_missing_impute_path)
-    if printing:
-        cat_missing_impute
-
-    # Continuous variables missing values using helper functions
-    cont_vars = cont_vars.apply(impute_missing_values)
-    cont_vars.apply(describe_numeric_col).T
-    if printing:
-        cont_vars
-
-    cat_vars.loc[cat_vars['customer_code'].isna(),'customer_code'] = 'None'
-    cat_vars = cat_vars.apply(impute_missing_values)
-    cat_vars.apply(lambda x: pd.Series([x.count(), x.isnull().sum()], index = ['Count', 'Missing'])).T
-    if printing:
-        cat_vars
-
-
-    ## Added a scaler for data standardisation
-    # We save this in the models directory
-    scaler_path = MODELS_DIR / "scaler.pkl"
-
-    scaler = MinMaxScaler()
-    scaler.fit(cont_vars)
-
-    joblib.dump(value=scaler, filename=scaler_path)
-    if printing:
-        print("Saved scaler in artifacts")
-
-    cont_vars = pd.DataFrame(scaler.transform(cont_vars), columns=cont_vars.columns)
-    if printing:
-        cont_vars
-
-    # Now we combine the data into one final dataframe
-    cont_vars = cont_vars.reset_index(drop=True)
-    cat_vars = cat_vars.reset_index(drop=True)
-    data = pd.concat([cat_vars, cont_vars], axis=1)
-    if printing:
-        print(f"Data cleansed and combined.\nRows: {len(data)}")
-        data
-
-    ## We add the artifact drift columns for future use
-    data_columns = list(data.columns)
-    data_columns_path = INTERIM_DATA_DIR / "columns_drift.json"
-    with open(data_columns_path,'w+') as f:           
-        json.dump(data_columns,f)
-        
-    # And then save the training data we have got so far after the first filtering
-    training_data_path = INTERIM_DATA_DIR / "training_data.csv"
-    data.to_csv(training_data_path, index=False)
-
-    if printing:
-        data.columns
-
-    # We bin based on the Source column (But all the data in our dataset is 'signup')
-    data['bin_source'] = data['source']
-    values_list = ['li', 'organic','signup','fb']
-    data.loc[~data['source'].isin(values_list),'bin_source'] = 'Others'
-    mapping = {'li' : 'socials', 
-            'fb' : 'socials', 
-            'organic': 'group1', 
-            'signup': 'group1'
-            }
-
-    data['bin_source'] = data['source'].map(mapping)
-    
-
-
-    return data

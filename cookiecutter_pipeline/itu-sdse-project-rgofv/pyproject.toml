@@ -18,6 +18,11 @@ classifiers = [
 requires-python = "~=3.11.9"
 
 
+[project.scripts]
+mlops = "mlops_pipeline.cli.app:app"
+
+
+
 [tool.ruff]
 line-length = 99
 src = ["mlops_pipeline"]
