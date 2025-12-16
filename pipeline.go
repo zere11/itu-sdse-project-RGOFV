@@ -96,9 +96,6 @@ func Build(ctx context.Context) error {
 	if _, err := pipelineRun.Directory("/repo/cookiecutter_pipeline/itu-sdse-project-rgofv/models/artifacts").Export(ctx, "artifacts"); err != nil {
 		return err
 	}
-	if _, err := pipelineRun.Directory("/repo/cookiecutter_pipeline/itu-sdse-project-rgofv/mlops_pipeline/modeling/mlruns").Export(ctx, "mlruns"); err != nil {
-		return err
-	}
 
 	fmt.Println("Pipeline complete")
 	return nil

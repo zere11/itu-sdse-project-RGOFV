@@ -1,3 +1,4 @@
+
 name: Run Dagger Pipeline
 
 on:
@@ -7,6 +8,7 @@ on:
       - main
       - workflow-fix
       - dagger
+      - cookiecutter02
 
 jobs:
   train:
@@ -34,23 +36,21 @@ jobs:
 
       - name: Rename model
         run: |
-          ls -al artifacts || true
-          test -f artifacts/lead_model_lr.pkl || (echo "Model not found: artifacts/lead_model_lr.pkl" && exit 1)
-          cp artifacts/lead_model_lr.pkl artifacts/model.pkl
-          ls -al artifacts
+          ls -al models || true
+          test -f models/lead_model_logreg.pkl || (echo "Model not found: models/lead_model_logreg.pkl" && exit 1)
+          cp models/lead_model_logreg.pkl models/model.pkl
+          ls -al models
+
+      - name: Validate model presence
+        run: |
+          ls -al models || true
+          test -f models/model.pkl || (echo "Model not found: models/model.pkl" && exit 1)
 
       - name: Upload Trained Model Artifact
         uses: actions/upload-artifact@v4
         with:
           name: model
-          path: artifacts/model.pkl
-
-      - name: Upload MLflow runs
-        if: ${{ hashFiles('mlruns/**') != '' }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: mlruns
-          path: mlruns
+          path: models/model.pkl
 
   test:
     name: Validate trained model
@@ -61,6 +61,11 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
+      - name: Download model artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: model
+          path: ./model
+        #Needs xgboost still?
       - name: Run Model Inference Test Action
         uses: lasselundstenjensen/itu-sdse-project-model-validator@main
-
