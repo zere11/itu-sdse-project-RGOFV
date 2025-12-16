@@ -41,3 +41,23 @@ def write_any(df: pd.DataFrame, path: Path):
         if ext not in {".parquet", ".pq"}:
             path = path.with_suffix(".parquet")    
         df.to_parquet(path, index=False)
+
+
+# We need some reader function for our exported X and y csv's: 
+def load_X_y(X_path: Path, y_path: Path):
+    """
+    Load features and single-column labels from CSV.
+    Assumes index is in column 0; adjust index_col as needed.
+    """
+    X = pd.read_csv(X_path, index_col=0)
+    y_df = pd.read_csv(y_path, index_col=None)
+
+    if y_df.shape[1] != 1:
+        raise ValueError(f"{y_path} must have exactly 1 column, got {y_df.shape[1]}")
+
+    y = y_df.iloc[:, 0]
+    # Ensure binary labels are ints 0/1 if applicable
+    if set(y.dropna().unique()) <= {0, 1}:
+        y = y.astype(int)
+
+    return X, y
