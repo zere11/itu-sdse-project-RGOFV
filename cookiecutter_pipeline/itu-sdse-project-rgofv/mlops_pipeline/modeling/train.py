@@ -197,6 +197,7 @@ def train_models(
             lr_classification_report=report_lr_test,
             xgboost_model_path=xgboost_pkl_path,
             lr_model_path=logreg_pkl_path,
+            X_train=X_train,  # Pass X_train for preprocessing pipeline
             printing=printing_bool
         )
         mlflow.log_artifact(str(best_model_path), artifact_path="model")
