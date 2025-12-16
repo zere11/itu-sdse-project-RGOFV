@@ -1,22 +1,23 @@
 from pathlib import Path
 import pandas as pd
+import json
+import joblib
+import shutil
 
 from loguru import logger
 from tqdm import tqdm
 import typer
 import mlflow
-import json
 
 from mlops_pipeline.config import MODELS_DIR, PROCESSED_DATA_DIR, INTERIM_DATA_DIR
 from mlops_pipeline.modeling.xgboost_rf import train_xgboost_model
 from mlops_pipeline.modeling.logreg import train_logreg_model
-
+from mlops_pipeline.modeling.save_best_model import save_best_model
 
 # We have the MLFlow pipeline saved in mlflow_utils. Let's import:
 from mlops_pipeline.utils.mlflow_utils import set_experiment, start_run, log_params, log_metrics, register_model, transition_stage, wait_until_ready
 
 app = typer.Typer()
-
 
 # We need some reader function for our exported X and y csv's: 
 def _load_X_y(X_path: Path, y_path: Path):
@@ -201,7 +202,20 @@ def main(
             artifact_path="metrics",
         )
 
-
+        # -------------------------------
+        # Save best model to model.pkl
+        # -------------------------------
+        best_model_path, best_model_type = save_best_model(
+            xgboost_model=best_model,
+            lr_model=best_model_lr,
+            xgboost_classification_report=report_test,
+            lr_classification_report=report_lr_test,
+            xgboost_model_path=xgboost_pkl_path,
+            lr_model_path=logreg_pkl_path,
+            printing=printing_bool
+        )
+        mlflow.log_artifact(str(best_model_path), artifact_path="model")
+        logger.info(f"Best model ({best_model_type}) saved to: {best_model_path}")
 
         # ---- (Optional) Register model in MLflow Model Registry ----
         if register:
