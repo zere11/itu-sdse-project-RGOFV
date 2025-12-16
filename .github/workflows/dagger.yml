@@ -33,6 +33,14 @@ jobs:
       - name: Run training pipeline
         run: dagger run go run ./pipeline.go
 
+     - name: Rename model
+        run: |
+          ls -al artifacts || true
+          test -f artifacts/lead_model_lr.pkl || (echo "Model not found: artifacts/lead_model_lr.pkl" && exit 1)
+          cp artifacts/lead_model_lr.pkl artifacts/model.pkl
+          ls -al artifacts
+
+
       - name: Upload Trained Model Artifact
         uses: actions/upload-artifact@v4
         with:
