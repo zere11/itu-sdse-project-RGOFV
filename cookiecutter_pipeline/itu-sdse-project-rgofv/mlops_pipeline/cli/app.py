@@ -10,6 +10,7 @@ from mlops_pipeline.dataset import data_app
 from mlops_pipeline.config import RAW_DATA_DIR, INTERIM_DATA_DIR, PROCESSED_DATA_DIR, EXTERNAL_DATA_DIR, PRINTING_STATE, MODELS_DIR, BASE_DATA
 from mlops_pipeline.data.make_dataset import make_dataset
 from mlops_pipeline.features.build_features import build_features
+from mlops_pipeline.modeling.train import train_models
 
 app = typer.Typer(help="Hi, and welcome to the RGoFV MLOps app! We are happy to see you here. \n This is a combined MLOps pipeline CLI. Commands are listed in order of operation.")
 #app.add_typer(data_app, name="data")
@@ -132,6 +133,28 @@ def prepare(
     logger.success(f"The MinMaxScaler has been pickled and saved at {scaler}.")
 
 
+@app.command("train-model")
+def train_model_cli(
+    X_train_path: Path = INTERIM_DATA_DIR / "X_train.csv",
+    X_test_path: Path = INTERIM_DATA_DIR / "X_test.csv",
+    y_train_path: Path = INTERIM_DATA_DIR / "y_train.csv",
+    y_test_path: Path = INTERIM_DATA_DIR / "y_test.csv",
+    printing_bool: bool = typer.Option(
+        PRINTING_STATE,
+        help="Enable verbose logging",
+    ),
+):
+    """
+    Train models (XGBoost + Logistic Regression), log to MLflow,
+    and save the best model.
+    """
+    train_models(
+        X_train_path=X_train_path,
+        X_test_path=X_test_path,
+        y_train_path=y_train_path,
+        y_test_path=y_test_path,
+        printing_bool=printing_bool,
+    )
 
 if __name__ == "__main__":
     app()
