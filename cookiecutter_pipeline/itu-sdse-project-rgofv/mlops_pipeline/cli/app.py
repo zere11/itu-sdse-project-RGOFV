@@ -11,6 +11,7 @@ from mlops_pipeline.config import RAW_DATA_DIR, INTERIM_DATA_DIR, PROCESSED_DATA
 from mlops_pipeline.data.make_dataset import make_dataset
 from mlops_pipeline.features.build_features import build_features
 from mlops_pipeline.modeling.train import train_models
+from mlops_pipeline.full_pipeline import run_full_pipeline
 
 app = typer.Typer(help="Hi, and welcome to the RGoFV MLOps app! We are happy to see you here. \n This is a combined MLOps pipeline CLI. Commands are listed in order of operation.")
 #app.add_typer(data_app, name="data")
@@ -155,6 +156,13 @@ def train_model_cli(
         y_test_path=y_test_path,
         printing_bool=printing_bool,
     )
+
+@app.command("run-all")
+def run_all():
+    """
+    Run the entire pipeline using subprocess calls.
+    """
+    run_full_pipeline()
 
 if __name__ == "__main__":
     app()
