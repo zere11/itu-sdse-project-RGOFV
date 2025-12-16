@@ -13,36 +13,17 @@ from mlops_pipeline.config import MODELS_DIR, PROCESSED_DATA_DIR, INTERIM_DATA_D
 from mlops_pipeline.modeling.xgboost_rf import train_xgboost_model
 from mlops_pipeline.modeling.logreg import train_logreg_model
 from mlops_pipeline.modeling.save_best_model import save_best_model
+from mlops_pipeline.utils.save_artifacts import save_artifacts
+from mlops_pipeline.data.io import load_X_y
 
 # We have the MLFlow pipeline saved in mlflow_utils. Let's import:
 from mlops_pipeline.utils.mlflow_utils import set_experiment, start_run, log_params, log_metrics, register_model, transition_stage, wait_until_ready
 
 app = typer.Typer()
 
-# We need some reader function for our exported X and y csv's: 
-def _load_X_y(X_path: Path, y_path: Path):
-    """
-    Load features and single-column labels from CSV.
-    Assumes index is in column 0; adjust index_col as needed.
-    """
-    X = pd.read_csv(X_path, index_col=0)
-    y_df = pd.read_csv(y_path, index_col=None)
-
-    if y_df.shape[1] != 1:
-        raise ValueError(f"{y_path} must have exactly 1 column, got {y_df.shape[1]}")
-
-    y = y_df.iloc[:, 0]
-    # Ensure binary labels are ints 0/1 if applicable
-    if set(y.dropna().unique()) <= {0, 1}:
-        y = y.astype(int)
-
-    return X, y
-
-
-
 
 @app.command()
-def main(
+def train_models(
     # Paths to the four datasets
     X_train_path: Path = INTERIM_DATA_DIR / "X_train.csv",
     X_test_path: Path = INTERIM_DATA_DIR / "X_test.csv",
@@ -67,7 +48,7 @@ def main(
     model_name: str = "LeadModel_XGBRF",
     stage: str = "Staging",
     data_version: str | None = None,
-    tags_kv: list[str] = typer.Option([], help="Additional tags, format: key=value")
+    #tags_kv: list[str] = typer.Option([], help="Additional tags, format: key=value")
 
 
 ):
@@ -75,8 +56,8 @@ def main(
     Train XGBoost RF using the pre-split csv's and saving a pkl and json of the best model.
     '''
     logger.info("Loading the split csv's...")
-    X_train, y_train = _load_X_y(X_train_path, y_train_path)
-    X_test,  y_test  = _load_X_y(X_test_path,  y_test_path)
+    X_train, y_train = load_X_y(X_train_path, y_train_path)
+    X_test,  y_test  = load_X_y(X_test_path,  y_test_path)
 
 
     # Build tags dict from CLI - Here we can add tags for specific runs
@@ -85,10 +66,10 @@ def main(
     if data_version:
         tags["data_version"] = data_version
     # Then we can merge additional key=value pairs
-    for kv in tags_kv:
-        if "=" in kv:
-            k, v = kv.split("=", 1)
-            tags[k.strip()] = v.strip()
+    #for kv in tags_kv:
+    #    if "=" in kv:
+    #        k, v = kv.split("=", 1)
+    #        tags[k.strip()] = v.strip()
 
     #MLflow code below:
     set_experiment(experiment_name)
@@ -115,7 +96,7 @@ def main(
 
         # Convert nested report dict to a compact json artifact:
         report = next(iter(model_results.values())) # This is the dict
-        report_path = MODELS_DIR / "classification_report_train.json"
+        report_path = MODELS_DIR / "classification_report_xgb_train.json"
         report_path.write_text(json.dumps(report, indent=2))
         mlflow.log_artifact(str(report_path), artifact_path="metrics")
 
@@ -138,11 +119,15 @@ def main(
 
         # Also store the test classification report as an artifact
         report_test = classification_report(y_test, y_pred_test, output_dict=True)
-        report_test_path = MODELS_DIR / "classification_report_test.json"
+        report_test_path = MODELS_DIR / "classification_report_xgb_test.json"
         report_test_path.write_text(json.dumps(report_test, indent=2))
         mlflow.log_artifact(str(report_test_path), artifact_path="metrics")
 
-                # ==================================
+        
+        logger.success(f"Saved scikit-learn wrapper to: {xgboost_pkl_path}")
+        logger.success(f"Saved native XGBoost Booster JSON to: {xgboost_json_path}")
+
+        # ==================================
         # Logistic Regression Training
         # ==================================
         logger.info("Training Logistic Regression (randomized search)...")
@@ -233,15 +218,17 @@ def main(
                 transition_stage(model_name, version, stage=stage, archive_existing=True)
                 logger.success(f"Model {model_name} v{version} transitioned to stage: {stage}")
 
-
-
-
-    logger.success(f"Saved scikit-learn wrapper to: {xgboost_pkl_path}")
-    logger.success(f"Saved native XGBoost Booster JSON to: {xgboost_json_path}")
     logger.success(f"Saved Logistic Regression model to: {logreg_pkl_path}")
 
-
-
+    # We save artifacts based on the classification reports.
+    save_artifacts(
+        X_train, 
+        MODELS_DIR / "classification_report_xgb_test.json",
+        MODELS_DIR / "classification_report_logreg_test.json",
+        MODELS_DIR / "artifacts" / "column_list.json",
+        MODELS_DIR / "artifacts" / "model_results.json",
+        False)
+    logger.success(f"Artifacts have been saved to models/artifacts")
 
 
 
