@@ -5,10 +5,7 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - main
-      - workflow-fix
-      - dagger
-      - cookiecutter02
+      - cookiecutter03
 
 jobs:
   train:
@@ -66,6 +63,15 @@ jobs:
         with:
           name: model
           path: ./model
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install model runtime dependencies
+        run: |
+          pip install scikit-learn pandas joblib "xgboost>=2.0.3"
 
       - name: Run Model Inference Test Action
         uses: lasselundstenjensen/itu-sdse-project-model-validator@main
