@@ -8,10 +8,8 @@ import (
 )
 
 func main() {
-	// Create a shared context
 	ctx := context.Background()
 
-	// Run the stages of the pipeline
 	if err := Build(ctx); err != nil {
 		fmt.Println("Error:", err)
 		panic(err)
@@ -19,61 +17,86 @@ func main() {
 }
 
 func Build(ctx context.Context) error {
-	// Initialize Dagger client
 	client, err := dagger.Connect(ctx)
 	if err != nil {
 		return err
 	}
 	defer client.Close()
 
-	// Host repository root
-	repo := client.Host().Directory(".")
+	// Host the entire repo root (include DVC metadata)
+	repo := client.Host().Directory(".", dagger.HostDirectoryOpts{
+		Include: []string{
+			"cookiecutter_pipeline/itu-sdse-project-rgofv/**",
+			".git/**",
+			".dvc/**",
+			"dvc.yaml",
+			"dvc.lock",
+			"**/*.dvc",
+		},
+	})
 
-	// Persistent pip cache to speed up installs across runs
+	// Persistent pip cache
 	pipCache := client.CacheVolume("pip-cache")
 
-	// Base container (first stage): install requirements using ONLY requirements.txt
+	// Base container
 	base := client.Container().
 		From("python:3.12.2-bookworm").
 		WithMountedCache("/root/.cache/pip", pipCache).
-		WithEnvVariable("PIP_DISABLE_PIP_VERSION_CHECK", "1")
-
-	// Copy requirements.txt and install; this layer will cache by the file content
-	req := repo.File("requirements.txt")
-	base = base.
-		WithFile("/tmp/requirements.txt", req).
-		WithExec([]string{
-			"bash", "-lc",
-			"python -m pip install --upgrade pip && python -m pip install -r /tmp/requirements.txt",
-		})
-
-	// Now mount the full repo and switch to /repo/notebooks
-	base = base.
+		WithEnvVariable("PIP_DISABLE_PIP_VERSION_CHECK", "1").
+		WithEnvVariable("PYTHONUNBUFFERED", "1").
+		WithEnvVariable("DVC_NO_ANALYTICS", "1").
 		WithDirectory("/repo", repo).
-		WithWorkdir("/repo/notebooks").
-		WithExec([]string{"python", "--version"})
+		WithWorkdir("/repo/cookiecutter_pipeline/itu-sdse-project-rgofv")
+
+	// Install git, dvc, and editable package
+	base = base.WithExec([]string{
+		"bash", "-lc",
+		"apt-get update && apt-get install -y --no-install-recommends git && " +
+			"python -m pip install --upgrade pip && " +
+			"python -m pip install dvc && " +
+			"python -m pip install -e .",
+	})
 
 	if _, err := base.Stdout(ctx); err != nil {
 		return err
 	}
 
-	fmt.Println("Initializing data loading and preprocessing")
-	dataPrep := base.WithExec([]string{"python", "01_data.py"})
-	if _, err := dataPrep.Stdout(ctx); err != nil {
+	fmt.Println("Pulling data with DVC")
+	base = base.WithExec([]string{
+		"bash", "-lc",
+		"dvc pull -v",
+	})
+
+	if _, err := base.Stdout(ctx); err != nil {
 		return err
 	}
 
-	fmt.Println("Initializing training and registration")
-	train := dataPrep.WithExec([]string{"python", "02_model.py"})
-	if _, err := train.Stdout(ctx); err != nil {
+	fmt.Println("Running entire pipeline")
+
+	// Run main.py
+	pipelineRun := base.WithExec([]string{
+		"python", "main.py",
+	})
+
+	if _, err := pipelineRun.Stdout(ctx); err != nil {
 		return err
 	}
 
-	fmt.Println("Exporing Artifacts and Data")
-	if _, err := train.Directory("/repo/notebooks/artifacts").Export(ctx, "artifacts"); err != nil {
+	fmt.Println("Exporting Artifacts and Data")
+
+	// Export base_data and models
+	if _, err := pipelineRun.Directory("/repo/cookiecutter_pipeline/itu-sdse-project-rgofv/base_data").Export(ctx, "base_data"); err != nil {
 		return err
 	}
-	if _, err := train.Directory("/repo/notebooks/mlruns").Export(ctx, "mlruns"); err != nil {
+	if _, err := pipelineRun.Directory("/repo/cookiecutter_pipeline/itu-sdse-project-rgofv/models").Export(ctx, "models"); err != nil {
+		return err
+	}
+
+	// Export artifacts and mlruns
+	if _, err := pipelineRun.Directory("/repo/cookiecutter_pipeline/itu-sdse-project-rgofv/models/artifacts").Export(ctx, "artifacts"); err != nil {
+		return err
+	}
+	if _, err := pipelineRun.Directory("/repo/cookiecutter_pipeline/itu-sdse-project-rgofv/mlops_pipeline/modeling/mlruns").Export(ctx, "mlruns"); err != nil {
 		return err
 	}
 
