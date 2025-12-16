@@ -66,6 +66,6 @@ jobs:
         with:
           name: model
           path: ./model
-
+        #Needs xgboost still?
       - name: Run Model Inference Test Action
         uses: lasselundstenjensen/itu-sdse-project-model-validator@main
