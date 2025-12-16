@@ -80,6 +80,19 @@ def make_dataset(raw_csv_path: Path, out_training_csv_path: Path, min_date: str,
         with open(INTERIM_DATA_DIR / "metadata" / "date_limits.json", "w") as f:
             json.dump(limits, f, indent=2)
 
+    # Drop columns only if they exist
+    cols_to_drop = ["is_active", "marketing_consent", "first_booking", "existing_customer", "last_seen"]
+    cols_to_drop = [col for col in cols_to_drop if col in data.columns]
+    if cols_to_drop:
+        data = data.drop(cols_to_drop, axis=1)
+
+    #Removing columns that will be added back after the EDA (MATTI: Don't think this is ever used again..? )
+    cols_to_drop2 = ["domain", "country", "visited_learn_more_before_booking", "visited_faq"]
+    cols_to_drop2 = [col for col in cols_to_drop2 if col in data.columns]
+    if cols_to_drop2:
+        data = data.drop(cols_to_drop2, axis=1)
+    # END OF CHANGE
+
     # Fill up empty fields with NaN
     for col in ["lead_indicator", "lead_id", "customer_code"]:
         if col in df.columns:
