@@ -30,6 +30,8 @@ from wrappers import lr_wrapper
 
 # Set MLflow tracking URI to store runs in repo root mlflow directory
 mlflow.set_tracking_uri("file:///repo/mlflow")
+# Ensure mlflow directory exists (prevents action from running otherwise)
+os.makedirs("/repo/mlflow", exist_ok=True)
 
 def wait_until_ready(model_name, model_version):
     client = MlflowClient()
