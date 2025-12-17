@@ -34,7 +34,7 @@ def load_and_prepare_data(data_gold_path: Path, out_dir: Path, scaler_path: Path
 
 
     ## Drop ID/Leak columns if present
-    drop_cols = [c for c in ["lead_id", "customer_code", "date_part"] if c in data.columns]
+    drop_cols = [c for c in ["lead_id", "customer_code", "date_part", "purchases"] if c in data.columns]
     if drop_cols:
         data = data.drop(columns=drop_cols)
         #data = data.drop([c], axis=1)
