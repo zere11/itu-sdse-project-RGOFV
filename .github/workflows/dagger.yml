@@ -53,6 +53,14 @@ jobs:
           name: model
           path: models/model.pkl
 
+        
+      - name: List artifacts directory
+        run: |
+          echo "PWD=$(pwd)"
+          ls -al artifacts || true
+          echo "Head of artifacts/X_test.csv:"
+          head -n 2 artifacts/X_test.csv || true
+
   test:
     name: Validate trained model
     needs: train
