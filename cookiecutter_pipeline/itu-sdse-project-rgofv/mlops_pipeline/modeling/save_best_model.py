@@ -7,7 +7,7 @@ from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.pipeline import Pipeline
 from mlops_pipeline.config import MODELS_DIR
 
-#test3
+
 def create_dummy_cols(df, col):
     '''
     Create one-hot encoding columns in the data.
@@ -32,14 +32,20 @@ class RobustDataPreprocessor(BaseEstimator, TransformerMixin):
     def fit(self, X, y=None):
         # Store expected feature names from training
         if self.expected_columns is not None:
-            self.final_columns = self.expected_columns
+            self.final_columns = list(self.expected_columns)
         else:
             self.final_columns = list(X.columns)
+        
+        logger.info(f"[RobustDataPreprocessor] Fitted with {len(self.final_columns)} columns")
+        logger.info(f"[RobustDataPreprocessor] Expected columns: {sorted(self.final_columns)[:10]}...")
         return self
     
     def transform(self, X):
         # Make a copy to avoid modifying original
         data = X.copy()
+        
+        logger.info(f"[RobustDataPreprocessor] Transform input shape: {data.shape}")
+        logger.info(f"[RobustDataPreprocessor] Transform input columns: {sorted(data.columns)[:10]}...")
         
         # Drop columns that should not be in the final features
         cols_to_drop = ["lead_id", "customer_code", "date_part"]
@@ -95,18 +101,32 @@ class RobustDataPreprocessor(BaseEstimator, TransformerMixin):
         # Combine
         data = pd.concat([other_vars.reset_index(drop=True), cat_vars.reset_index(drop=True)], axis=1)
         
+        logger.info(f"[RobustDataPreprocessor] After one-hot encoding, columns: {sorted(data.columns)[:10]}...")
+        logger.info(f"[RobustDataPreprocessor] Shape before reindex: {data.shape}")
+        
         # Convert to float
         for col in data.columns:
             data[col] = pd.to_numeric(data[col], errors="coerce")
         
-        # Ensure all expected columns are present, fill missing with 0
-        # Ensure all expected columns are present, fill missing with 0
+        # 🔥 CRITICAL FIX: Reindex to match training columns EXACTLY
         if self.final_columns is not None:
-             # Reindex guarantees that we have exactly the columns we expect, in order.
-             # Any new columns (unexpected) are dropped.
-             # Any missing columns (expected) are added with NaN (fill_value handles fill).
-             target_cols = self.final_columns
-             data = data.reindex(columns=target_cols, fill_value=0.0)
+            logger.info(f"[RobustDataPreprocessor] Reindexing to {len(self.final_columns)} expected columns...")
+            
+            # Check which columns are missing
+            missing_cols = set(self.final_columns) - set(data.columns)
+            if missing_cols:
+                logger.warning(f"[RobustDataPreprocessor] Missing columns (will be filled with 0): {sorted(missing_cols)}")
+            
+            # Check which columns are extra
+            extra_cols = set(data.columns) - set(self.final_columns)
+            if extra_cols:
+                logger.warning(f"[RobustDataPreprocessor] Extra columns (will be dropped): {sorted(extra_cols)}")
+            
+            # Reindex guarantees exact column match with training
+            data = data.reindex(columns=self.final_columns, fill_value=0.0)
+            
+            logger.info(f"[RobustDataPreprocessor] After reindex shape: {data.shape}")
+            logger.info(f"[RobustDataPreprocessor] Final columns match training: {list(data.columns) == self.final_columns}")
         
         return data
 
@@ -157,6 +177,10 @@ def save_best_model(
     
     # Create preprocessing pipeline if X_train is provided
     if X_train is not None:
+        # 🔥 CRITICAL: Pass the exact training column names
+        logger.info(f"[save_best_model] X_train has {len(X_train.columns)} columns")
+        logger.info(f"[save_best_model] X_train columns: {sorted(X_train.columns)[:10]}...")
+        
         preprocessor = RobustDataPreprocessor(expected_columns=list(X_train.columns))
         preprocessor.fit(X_train)
         
