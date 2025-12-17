@@ -47,6 +47,11 @@ def load_and_prepare_data(data_gold_path: Path, out_dir: Path, scaler_path: Path
     other_vars = data.drop(cat_cols, axis=1).copy()
 
     for col in cat_vars.columns:
+        # Force onboarding to boolean to generate 'onboarding_True' dummy
+        # This aligns with the remote validator which expects/produces onboarding_True
+        if col == "onboarding":
+             cat_vars[col] = cat_vars[col].astype(bool)
+        
         cat_vars[col] = cat_vars[col].astype("category")
         cat_vars = create_dummy_cols(cat_vars, col)
 
