@@ -20,6 +20,7 @@ def test_full_pipeline_logic():
         "age", 
         "onboarding_True",  # The result of dummy encoding with bool
         "source_li", "source_organic", "source_signup", # bin_source dummies
+        "bin_source_socials", "bin_source_group1", # bin_source dummies
         # country is NOT here because we dropped it in train.py!
         # wait, train.py loads X_train then drops it.
         # But DataPreprocessor "expected_columns" comes from the X_train PASSED to it.
@@ -85,6 +86,7 @@ def test_full_pipeline_logic():
              sys.exit(1)
 
         # Check 3: Missing columns filled
+        # source="organic" -> bin_source="group1" -> bin_source_group1=1, bin_source_socials=0.0
         if "source_li" not in cols:
              print("FAIL: 'source_li' (missing from input) should have been added by reindex.")
              sys.exit(1)
@@ -93,6 +95,16 @@ def test_full_pipeline_logic():
         if val_li != 0.0:
             print(f"FAIL: source_li should be 0.0, got {val_li}")
             sys.exit(1)
+            
+        # Also check bin_source_socials if expected
+        if "bin_source_socials" in expected_cols:
+            if "bin_source_socials" not in cols:
+                print("FAIL: bin_source_socials missing! Reindex failed.")
+                sys.exit(1)
+            val_socials = X_out.iloc[0]["bin_source_socials"]
+            if val_socials != 0.0:
+                 print(f"FAIL: bin_source_socials should be 0.0, got {val_socials}")
+                 sys.exit(1)
 
         print("\nSUCCESS: Pipeline logic verified!")
         
