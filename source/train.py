@@ -26,7 +26,7 @@ from mlflow.tracking.client import MlflowClient
 from mlflow.entities.model_registry.model_version_status import ModelVersionStatus
 
 from helpers import create_dummy_cols
-from mlflow_wrapper import lr_wrapper
+from wrappers import lr_wrapper
 
 def wait_until_ready(model_name, model_version):
     client = MlflowClient()
