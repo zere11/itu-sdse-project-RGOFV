@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 import sys
-from mlops_pipeline.modeling.save_best_model import DataPreprocessor
+from mlops_pipeline.modeling.save_best_model import RobustDataPreprocessor
 
 def test_full_pipeline_logic():
     print("--- Starting Pipeline Logic Verification ---")
@@ -32,7 +32,7 @@ def test_full_pipeline_logic():
     print(f"Expected Training Columns: {expected_cols}")
 
     # 2. Initialize Preprocessor with these columns
-    processor = DataPreprocessor(expected_columns=expected_cols)
+    processor = RobustDataPreprocessor(expected_columns=expected_cols)
     # Fit is trivial (just sets feature_names_)
     processor.fit(None) # Argument ignored if expected_columns provided
 

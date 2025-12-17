@@ -18,10 +18,11 @@ def create_dummy_cols(df, col):
     return new_df
 
 
-class DataPreprocessor(BaseEstimator, TransformerMixin):
+class RobustDataPreprocessor(BaseEstimator, TransformerMixin):
     """
     Custom transformer to preprocess data for model inference.
     Handles the same preprocessing steps as the training pipeline.
+    Renamed to RobustDataPreprocessor to ensure fresh code usage.
     """
     def __init__(self, expected_columns=None):
         self.expected_columns = expected_columns
@@ -154,7 +155,7 @@ def save_best_model(
     
     # Create preprocessing pipeline if X_train is provided
     if X_train is not None:
-        preprocessor = DataPreprocessor(expected_columns=list(X_train.columns))
+        preprocessor = RobustDataPreprocessor(expected_columns=list(X_train.columns))
         preprocessor.fit(X_train)
         
         # Compare and save the better model wrapped in a pipeline

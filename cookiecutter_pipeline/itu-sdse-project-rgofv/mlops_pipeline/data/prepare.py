@@ -42,6 +42,9 @@ def load_and_prepare_data(data_gold_path: Path, out_dir: Path, scaler_path: Path
             print(f"[prepare.py] dropped Columns {drop_cols}")
 
     # Categorical handling
+    if "onboarding" not in data.columns:
+        raise ValueError("CRITICAL ERROR: 'onboarding' column is MISSING from input data in prepare.py!")
+        
     cat_cols = [c for c in ["customer_group", "onboarding", "bin_source", "source"] if c in data.columns]
     cat_vars = data[cat_cols].copy()
     other_vars = data.drop(cat_cols, axis=1).copy()
