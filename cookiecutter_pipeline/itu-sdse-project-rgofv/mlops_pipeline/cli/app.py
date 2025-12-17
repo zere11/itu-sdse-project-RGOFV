@@ -8,7 +8,8 @@ from mlops_pipeline.data.prepare import load_and_prepare_data
 from mlops_pipeline.features_cli import feature_app
 from mlops_pipeline.dataset import data_app
 from mlops_pipeline.config import RAW_DATA_DIR, INTERIM_DATA_DIR, PROCESSED_DATA_DIR, EXTERNAL_DATA_DIR, PRINTING_STATE, MODELS_DIR, BASE_DATA
-from mlops_pipeline.data.make_dataset import make_dataset
+#from mlops_pipeline.data.make_dataset import make_dataset
+from mlops_pipeline.data.make_dataset02 import make_dataset
 from mlops_pipeline.features.build_features import build_features
 from mlops_pipeline.modeling.train import train_models
 from mlops_pipeline.full_pipeline import run_full_pipeline
@@ -95,7 +96,7 @@ def build_features_cli(
 @app.command("prepare")
 def prepare(
     data_gold_path: Path = typer.Option(
-        PROCESSED_DATA_DIR / "training_features_gold.csv", 
+        PROCESSED_DATA_DIR / "train_data_gold.csv", 
         help="Sets the path for finding the gold data, as created by the build command. Default is processed/training_features_gold.csv" ),
     data_out_dir: Path = typer.Option(
         INTERIM_DATA_DIR,
