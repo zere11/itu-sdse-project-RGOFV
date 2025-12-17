@@ -1,3 +1,6 @@
+'''Technically not used, but nice to have a single source of truth for file paths
+especially in the context of MLOps, and software engineering in general.'''
+
 from pathlib import Path
 
 # Project root
