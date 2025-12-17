@@ -88,9 +88,6 @@ func Build(ctx context.Context) error {
 	if _, err := pipelineRun.Directory("/repo/cookiecutter_pipeline/itu-sdse-project-rgofv/base_data").Export(ctx, "base_data"); err != nil {
 		return err
 	}
-	if _, err := pipelineRun.Directory("/repo/cookiecutter_pipeline/itu-sdse-project-rgofv/models").Export(ctx, "models"); err != nil {
-		return err
-	}
 
 	// Export artifacts and mlruns
 	if _, err := pipelineRun.Directory("/repo/cookiecutter_pipeline/itu-sdse-project-rgofv/models/artifacts").Export(ctx, "artifacts"); err != nil {

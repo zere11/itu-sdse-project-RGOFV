@@ -5,7 +5,6 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler
 import joblib
 
-from .io import write_any
 
 
 def create_dummy_cols(df, col):
@@ -26,74 +25,93 @@ def create_dummy_cols(df, col):
     return new_df
 
 
-def load_and_prepare_data(data_gold_path: Path, out_dir: Path, scaler_path: Path, test_size: float = 0.15, random_state: int = 42, printing: bool=False):
+
+
+
+def load_and_prepare_data(data_gold_path: Path, out_dir: Path, test_size: float = 0.15, random_state: int = 42, printing: bool=False):
     data = pd.read_csv(data_gold_path)
     if printing:
         print(f"[prepare.py] Training data length: {len(data)}")
-        print(f"[prepare.py] Columns: {list(data.columns)[:10]}...")
+        print(data.head(5))
 
 
-    ## Drop ID/Leak columns if present
-    drop_cols = [c for c in ["lead_id", "customer_code", "date_part"] if c in data.columns]
-    if drop_cols:
-        data = data.drop(columns=drop_cols)
-        #data = data.drop([c], axis=1)
-        if printing:
-            print(f"[prepare.py] dropped Columns {drop_cols}")
+    data = data.drop(["lead_id", "customer_code", "date_part"], axis=1)
 
-    # Categorical handling
-    cat_cols = [c for c in ["customer_group", "onboarding", "bin_source", "source"] if c in data.columns]
-    cat_vars = data[cat_cols].copy()
-    other_vars = data.drop(cat_cols, axis=1).copy()
+    cat_cols = ["customer_group", "onboarding", "bin_source", "source"]
+    cat_vars = data[cat_cols]
 
-    for col in cat_vars.columns:
+    other_vars = data.drop(cat_cols, axis=1)
+
+
+    for col in cat_vars:
         cat_vars[col] = cat_vars[col].astype("category")
         cat_vars = create_dummy_cols(cat_vars, col)
 
     data = pd.concat([other_vars, cat_vars], axis=1)
 
-    # Ensure numeric values
-    for col in data.columns:
-        #data[col] = data[col].astype("float64")
-        # target can be int/bool; keep it numeric-friendly too
-        data[col] = pd.to_numeric(data[col], errors="coerce")
 
+    # After dummies and concat with other_vars:
+    print("[prepare] Columns post-dummies:", sorted(data.columns))
+    assert "source_signup" in data.columns, "Missing source_signup after dummies"
+    assert "bin_source_group1" in data.columns, "Missing bin_source_group1 after dummies"
+    assert "onboarding_False" in data.columns, "Missing onboarding_False after dummies"
+    assert "customer_group_1" in data.columns, "Missing onboarding_False after dummies"
+
+
+    for col in data:
+        data[col] = data[col].astype("float64")
         if printing:
-            print(f"[prepare.py] Changed column {col} to float")
+            print(f"Changed column {col} to float")
 
     y = data["lead_indicator"]
-    X = data.drop(["lead_indicator"], axis=1)
+    X = data.drop(["lead_indicator", "source_signup", "bin_source_group1", "onboarding_False", "customer_group_1"], axis=1)
+    #X = data.drop(["source_signup", "bin_source_group1", "onboarding_False", "customer_group_1"], axis=1)
+
 
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, random_state=random_state, test_size=test_size, stratify=y
     )
 
 
+    if printing:
+        print(y_train)
+
 
     numeric_cols = X.select_dtypes(include=["float64", "int64"]).columns
     #non_numeric_cols = X.columns.difference(numeric_cols)
 
     # Let's create our MinMaxScaler here:
-    scaler = MinMaxScaler()
-    scaler.fit(X_train[numeric_cols])
+    # ACTUALLY NO CHANGES!! Scaler stays earlier in the workflow.
+    #scaler = MinMaxScaler()
+    #scaler.fit(X_train[numeric_cols])
 
     # We copy all data from the original X, then transform with the fitted scaler.
-    X_train_scaled = X_train.copy()
-    X_train_scaled[numeric_cols] = scaler.transform(X_train[numeric_cols])
+    #X_train_scaled = X_train.copy()
+    #X_train_scaled[numeric_cols] = scaler.transform(X_train[numeric_cols])
 
-    X_test_scaled = X_test.copy()
-    X_test_scaled[numeric_cols] = scaler.transform(X_test[numeric_cols])
+    #X_test_scaled = X_test.copy()
+    #X_test_scaled[numeric_cols] = scaler.transform(X_test[numeric_cols])
 
 
-    joblib.dump(value=scaler, filename=scaler_path)
+    #joblib.dump(value=scaler, filename=scaler_path)
+
+
+    for name, X_part in [("X_train", X_train), ("X_test", X_test)]:
+        print(f"Checking before CSV's: [prepare] {name} columns:", sorted(X_part.columns))
+
 
     out_dir.mkdir(parents=True, exist_ok=True)
 
     # Write FOUR separate files
-    X_train_path = write_any(X_train_scaled, out_dir / "X_train.csv")
-    y_train_path = write_any(y_train.to_frame(name="lead_indicator"), out_dir / "y_train.csv")
-    X_test_path  = write_any(X_test_scaled,  out_dir / "X_test.csv")
-    y_test_path  = write_any(y_test.to_frame(name="lead_indicator"),  out_dir / "y_test.csv")
+    X_train_path =  out_dir / "X_train.csv"
+    y_train_path =  out_dir / "y_train.csv"
+    X_test_path  =  out_dir / "X_test.csv"
+    y_test_path  =   out_dir / "y_test.csv"
+
+    X_train.to_csv(X_train_path, index=False)
+    y_train.to_frame(name="lead indicator").to_csv(y_train_path, index=False)
+    X_test.to_csv(X_test_path, index=False) 
+    y_test.to_frame(name="lead indicator").to_csv(y_test_path, index=False)
 
     if printing:
         print(f"[prepare] Saved:")
@@ -101,8 +119,8 @@ def load_and_prepare_data(data_gold_path: Path, out_dir: Path, scaler_path: Path
         print(f"  - {y_train_path}")
         print(f"  - {X_test_path}")
         print(f"  - {y_test_path}")
-        print(f"[prepare] Shapes: X_train={X_train_scaled.shape}, y_train={y_train.shape}, "
-              f"X_test={X_test_scaled.shape}, y_test={y_test.shape}")
+        print(f"[prepare] Shapes: X_train={X_train.shape}, y_train={y_train.shape}, "
+              f"X_test={X_test.shape}, y_test={y_test.shape}")
 
 
     return {
@@ -111,3 +129,11 @@ def load_and_prepare_data(data_gold_path: Path, out_dir: Path, scaler_path: Path
         "X_test": X_test_path,
         "y_test": y_test_path,
     }
+
+
+
+
+   
+
+
+

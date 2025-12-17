@@ -12,12 +12,10 @@ import mlflow
 from mlops_pipeline.config import MODELS_DIR, PROCESSED_DATA_DIR, INTERIM_DATA_DIR
 from mlops_pipeline.modeling.xgboost_rf import train_xgboost_model
 from mlops_pipeline.modeling.logreg import train_logreg_model
-from mlops_pipeline.modeling.save_best_model import save_best_model
 from mlops_pipeline.utils.save_artifacts import save_artifacts
-from mlops_pipeline.data.io import load_X_y
 
 # We have the MLFlow pipeline saved in mlflow_utils. Let's import:
-from mlops_pipeline.utils.mlflow_utils import set_experiment, start_run, log_params, log_metrics, register_model, transition_stage, wait_until_ready
+from mlops_pipeline.utils.mlflow_utils import start_run, log_metrics
 
 app = typer.Typer()
 
@@ -74,7 +72,7 @@ def train_models(
     #        tags[k.strip()] = v.strip()
 
     #MLflow code below:
-    set_experiment(experiment_name)
+    mlflow.set_experiment(experiment_name)
 
     with start_run(run_name=run_name, tags=tags) as run:
         logger.info(f"MLflow run_id: {run.info.run_id}")
@@ -189,36 +187,8 @@ def train_models(
             artifact_path="metrics",
         )
 
-        # -------------------------------
-        # Save best model to model.pkl
-        # -------------------------------
-        best_model_path, best_model_type = save_best_model(
-            xgboost_model=best_model,
-            lr_model=best_model_lr,
-            xgboost_classification_report=report_test,
-            lr_classification_report=report_lr_test,
-            xgboost_model_path=xgboost_pkl_path,
-            lr_model_path=logreg_pkl_path,
-            printing=printing_bool
-        )
-        mlflow.log_artifact(str(best_model_path), artifact_path="model")
-        logger.info(f"Best model ({best_model_type}) saved to: {best_model_path}")
-
-        # ---- (Optional) Register model in MLflow Model Registry ----
-        if register:
-            # We registered the ARTIFACT path where we logged the model JSON under this run:
-            #   runs:/<run_id>/model/lead_model_xgboost.json
-            # Your helper expects the artifact_path relative to the run root:
-            artifact_rel_path = f"model/{xgboost_json_path}"
-            version = register_model(artifact_rel_path, model_name)
-            logger.info(f"Requested registration: {model_name} v{version}")
-
-
-            # Wait for registry to finish materializing the model
-            ready = wait_until_ready(model_name, version, retries=20, sleep_seconds=1.0, raise_on_fail=True)
-            if ready:
-                transition_stage(model_name, version, stage=stage, archive_existing=True)
-                logger.success(f"Model {model_name} v{version} transitioned to stage: {stage}")
+        
+        
 
     logger.success(f"Saved Logistic Regression model to: {logreg_pkl_path}")
 

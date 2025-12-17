@@ -18,6 +18,9 @@ def build_features(training_csv_path: Path, out_processed_csv_path: Path, printi
 
     df_feat = pd.concat([cat, cont], axis=1)
 
+
+
+
     # binning
     mapping = {"li": "socials", "fb": "socials", "organic": "group1", "signup": "group1"}
     if "source" in df_feat.columns:
@@ -28,7 +31,6 @@ def build_features(training_csv_path: Path, out_processed_csv_path: Path, printi
 
     if printing:
         logger.info(f"Processed features: {out_processed_csv_path} (rows={len(df_feat)}, cols={df_feat.shape[1]})")
-        logger.info(f"Scaler saved: {scaler_path}")
 
 
 

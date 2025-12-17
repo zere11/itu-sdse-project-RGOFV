@@ -4,7 +4,7 @@ build-backend = "flit_core.buildapi"
 
 [project]
 name = "mlops_pipeline"
-version = "0.0.4"
+version = "0.1.0"
 description = "Cookiecutter Pipeline for the Autumn 2025 MLOps group exam project."
 authors = [
   { name = "RGoFV" },
