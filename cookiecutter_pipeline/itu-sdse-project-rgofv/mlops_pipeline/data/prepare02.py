@@ -94,10 +94,10 @@ def load_and_prepare_data(data_gold_path: Path, out_dir: Path, scaler_path: Path
     X_test_path  =  out_dir / "X_test.csv"
     y_test_path  =   out_dir / "y_test.csv"
 
-    X_train.to_csv(X_train_path)
-    y_train.to_csv(y_train_path)
-    X_test.to_csv(X_test_path) 
-    y_test.to_csv(y_test_path)
+    X_train.to_csv(X_train_path, index=False)
+    y_train.to_csv(y_train_path, index=False)
+    X_test.to_csv(X_test_path, index=False) 
+    y_test.to_csv(y_test_path, index=False)
 
     if printing:
         print(f"[prepare] Saved:")
