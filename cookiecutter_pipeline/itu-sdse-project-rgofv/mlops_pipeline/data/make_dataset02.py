@@ -89,6 +89,21 @@ def make_dataset(raw_csv_path: Path, out_training_csv_path: Path, min_date: str,
     with open(INTERIM_DATA_DIR / "metadata" / "date_limits.json", "w") as f:
         json.dump(date_limits, f)
 
+
+    data = data.drop(
+        [
+            "is_active", "marketing_consent", "first_booking", "existing_customer", "last_seen"
+        ],
+        axis=1
+    )
+
+    #Removing columns that will be added back after the EDA
+    data = data.drop(
+        ["domain", "country", "visited_learn_more_before_booking", "visited_faq"],
+        axis=1
+    )
+
+    '''
     cols_to_drop = ["is_active", "marketing_consent", "first_booking", "existing_customer", "last_seen"]
     cols_to_drop = [col for col in cols_to_drop if col in data.columns]
     if cols_to_drop:
@@ -99,6 +114,8 @@ def make_dataset(raw_csv_path: Path, out_training_csv_path: Path, min_date: str,
     cols_to_drop2 = [col for col in cols_to_drop2 if col in data.columns]
     if cols_to_drop2:
         data = data.drop(cols_to_drop2, axis=1)
+    '''
+    
 
 
     data["lead_indicator"].replace("", np.nan, inplace=True)
@@ -209,7 +226,7 @@ def make_dataset(raw_csv_path: Path, out_training_csv_path: Path, min_date: str,
             }
 
     data['bin_source'] = data['source'].map(mapping)
-    
+
     (PROCESSED_DATA_DIR).mkdir(parents=True, exist_ok=True)
     data.to_csv(PROCESSED_DATA_DIR / 'train_data_gold.csv', index=False)
     
