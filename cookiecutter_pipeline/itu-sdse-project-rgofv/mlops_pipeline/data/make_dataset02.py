@@ -1,4 +1,5 @@
 from __future__ import annotations
+from pandas.api.types import is_numeric_dtype
 import pandas as pd
 from pathlib import Path
 import datetime
@@ -16,7 +17,32 @@ from mlops_pipeline.config import DATA_DIR, RAW_DATA_DIR, INTERIM_DATA_DIR, PRIN
 
 
 # Two helper functions for the data preparation.
-def describe_numeric_col(x):
+
+
+
+def describe_numeric_col(x: pd.Series) -> pd.Series:
+    return pd.Series(
+        [
+            int(x.count()),
+            int(x.isna().sum()),
+            float(x.mean()) if x.count() else float("nan"),
+            float(x.min()) if x.count() else float("nan"),
+            float(x.max()) if x.count() else float("nan"),
+        ],
+        index=["Count", "Missing", "Mean", "Min", "Max"],
+    )
+
+def impute_missing_values(x: pd.Series, method: str = "mean") -> pd.Series:
+    if method not in {"mean", "median"}:
+        raise ValueError("Method must be either mean or median.")
+    if is_numeric_dtype(x):
+        fill_val = x.mean() if method == "mean" else x.median()
+        return x.fillna(fill_val)
+    mode = x.mode(dropna=True)
+    if not mode.empty:
+               return x.fillna(mode.iloc[0])
+
+#def describe_numeric_col(x):
     """
     Calculates various descriptive stats for a numeric column in a dataframe.
 
@@ -25,12 +51,12 @@ def describe_numeric_col(x):
     Output:
         y (pd.Series): Pandas series with descriptive stats. 
     """
-    return pd.Series(
-        [x.count(), x.isnull().count(), x.mean(), x.min(), x.max()],
-        index=["Count", "Missing", "Mean", "Min", "Max"]
-    )
+   # return pd.Series(
+  #      [x.count(), x.isnull().count(), x.mean(), x.min(), x.max()],
+ #       index=["Count", "Missing", "Mean", "Min", "Max"]
+#    )
 
-def impute_missing_values(x, method="mean"):
+#def impute_missing_values(x, method="mean"):
     """
     Imputes the mean/median for numeric columns or the mode for other types.
 
@@ -41,14 +67,14 @@ def impute_missing_values(x, method="mean"):
     Output:
         x (pd.Series): Pandas series with added mean/median
     """
-    if method not in ["mean", "median"]:
-        raise ValueError("Method must be either mean or median.")
+ #   if method not in ["mean", "median"]:
+  #      raise ValueError("Method must be either mean or median.")
 
-    if (x.dtype == "float64") | (x.dtype == "int64"):
+   # if (x.dtype == "float64") | (x.dtype == "int64"):
         x = x.fillna(x.mean()) if method=="mean" else x.fillna(x.median())
-    else:
+   # else:
         x = x.fillna(x.mode()[0])
-    return x
+   # return x
 
 
 
