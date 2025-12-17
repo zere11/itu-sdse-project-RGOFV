@@ -66,6 +66,15 @@ class DataPreprocessor(BaseEstimator, TransformerMixin):
             # Fill any NaN values with 'group1' as default
             data['bin_source'] = data['bin_source'].fillna('group1')
         
+        # Normalize onboarding to ensure consistent dummy column names (onboarding_1 vs onboarding_True)
+        # We'll treat it as string '1'/'0' or just map boolean to int 1/0
+        if "onboarding" in data.columns:
+             # Map booleans or strings to 0/1, then to string to match 'category' behavior if needed
+             # or simply ensure it matches training. 
+             # Assuming training had 0/1 (int/float).
+             vals = {True: 1, False: 0, "True": 1, "False": 0, "1": 1, "0": 0, 1: 1, 0: 0}
+             data["onboarding"] = data["onboarding"].map(vals).fillna(0).astype(int)
+
         # Handle categorical columns - one-hot encode
         cat_cols = ["customer_group", "onboarding", "bin_source", "source"]
         cat_vars = data[[col for col in cat_cols if col in data.columns]].copy()

@@ -1,0 +1,6 @@
+Transformed columns: ['lead_id', 'country', 'onboarding', 'source', 'age']
+FAIL: country column persisted.
+Has onboarding_1: False
+Has onboarding_True: False
+Transformed string input cols: ['lead_id', 'country', 'onboarding', 'source', 'age']
+FAIL: string 'True' not handled correctly
