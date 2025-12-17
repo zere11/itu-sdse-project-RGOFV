@@ -56,8 +56,10 @@ def train_models(
     Train XGBoost RF using the pre-split csv's and saving a pkl and json of the best model.
     '''
     logger.info("Loading the split csv's...")
-    X_train, y_train = load_X_y(X_train_path, y_train_path)
-    X_test,  y_test  = load_X_y(X_test_path,  y_test_path)
+    X_train = pd.read_csv(X_train_path)
+    y_train = pd.read_csv(y_train_path)
+    X_test = pd.read_csv(X_test_path)
+    y_test  = pd.read_csv(y_test_path)
 
 
     # Build tags dict from CLI - Here we can add tags for specific runs
