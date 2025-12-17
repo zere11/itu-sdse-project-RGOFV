@@ -1,78 +1,36 @@
 # ITU BDS MLOPS'25 - Project
 
-## Task
+# ITU SDSE Project - Lead Model Pipeline (Naive Implementation)
 
-Based on the input provided (see below), fork the repository and restructure the code to adhere to the concepts and ideas you have seen throughout the course.  The diagram below provides a detailed overview of the structure that the solution is expected to follow.   
+A simplified, manual implementation of a machine learning pipeline using Dagger and Go. This is a naive approach without DVC - all data must be present locally before running.
 
-![Project architecture](./docs/project-architecture.png)
+## Folder Structure
 
-For the exam submission, we expect you to submit a pdf containing:
-- the list of members of the group
-- the link to the github.com public repository hosting your solution
-  - following the above, there is *no need* to invite the teaching staff as collaborators
+├── source/ # Pipeline scripts
+│ ├── makedataset.py # Load raw data
+│ ├── preprocess.py # Clean and prepare data
+│ ├── features.py # Feature engineering
+│ ├── train.py # Train models with MLflow
+│ ├── helpers.py # Utility functions
+│ ├── wrappers.py # MLflow model wrappers
+│ └── dataset.py # Data loading
+│
+├── artifacts/ # Input data & outputs
+│ ├── raw_data.csv # Input data (must exist)
+│ ├── train_data_gold.csv # Processed data
+│ ├── model.pkl # Best model
+│ └── *.json, *.csv # Metrics and artifacts
+│
+├── mlflow/ # MLflow tracking
+│ └── (experiment runs)
+│
+├── pipeline.go # Dagger pipeline definition
+├── requirements.txt # Python dependencies
+└── README.md # This file
 
-The repository linked in the submission should contain:
+This is a **naive implementation**:
 
-- A README.md file that describes the project
-- GitHub automation workflow
-- Dagger workflow (in Go)
-- All history
-
-
-## Inputs
-
-You are given the following material:
-- Python monolith (see `notebooks` folder)
-- Raw input data (see `notebooks/artifacts` folder)
-- GitHub action to test model inference (see [`model-validator`](https://github.com/lasselundstenjensen/itu-sdse-project-model-validator) action)
-
-## Outputs
-
-- Your GitHub repository (including all history)
-  - A README.md file that describes the project
-  - GitHub automation workflow
-  - Dagger workflow (in Go)
-- Model artifact produced by GitHub workflow and named 'model'
-
-> **NOTE:**
-> The Dagger workflow can be run locally or inside the GitHub workflow—both are viable options during development.
->
-> The Dagger workflow can run locally and can also be made to produce outputs locally during development. But when wrapping the Dagger workflow in a GitHub workflow, the output is instead stored inside the GitHub runner (i.e. a virtual machine).
->
-> Use the publicly available [`actions/upload-artifact`](https://github.com/actions/upload-artifact) to store the model artifact in the GitHub worklow pipeline.
->
-> This model artifact can then be picked up by the [action provided](https://github.com/lasselundstenjensen/itu-sdse-project-model-validator), which will run some inference tests to ensure that the correct model was trained.
-
-
-## How will we assess
-
-Below, we provide information on how we will assess the submission clustered around several aspects.  The list relates to groups of size 3; if your group is of size 4, you are expected also to work on the optional items, i.e., to use pull requests and to provide tests.
-
-#### Versioning
-
-- Use of Git (semantic commit messages, branches, branch longevity, commit frequency/size)
-- Management of data
-- Use of pull requests (OPTIONAL)
-
-#### Programming
-
-- Decomposition of Python notebook
-- Adherance to standard data science MLOps project structure
-- Presence of tests (OPTIONAL)
-
-#### Workflow automation
-
-- Presence of a workflow that trains the model
-- Presence of a workflow that tests the model
-- Structure of Dagger workflow
-- Orchestration of Dagger workflow through GitHub workflow
-
-#### Documentation (README.md)
-
-- Description of project structure
-- How to run the code and generate the model artifact
-
-
-## Questions
-
-If you have any questions about the information shared here, please feel free to post them on Learnit. Answers to private emails on this topic will also be shared on Learnit, along with the original email content, so that everyone has access to the same information.
+No DVC integration - data must be manually managed
+Manual cookiecutter-style pipeline (not fully automated)
+Minimal error handling
+mlflow not initiated
