@@ -99,7 +99,7 @@ def make_dataset(raw_csv_path: Path, out_training_csv_path: Path, min_date: str,
 
     #Removing columns that will be added back after the EDA
     data = data.drop(
-        ["domain", "country", "visited_learn_more_before_booking", "visited_faq"],
+        ["domain", "country", "visited_learn_more_before_booking", "visited_faq", "purchases"],
         axis=1
     )
 
