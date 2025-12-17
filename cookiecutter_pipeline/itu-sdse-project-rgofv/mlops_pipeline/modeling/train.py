@@ -13,6 +13,7 @@ from mlops_pipeline.config import MODELS_DIR, PROCESSED_DATA_DIR, INTERIM_DATA_D
 from mlops_pipeline.modeling.xgboost_rf import train_xgboost_model
 from mlops_pipeline.modeling.logreg import train_logreg_model
 from mlops_pipeline.utils.save_artifacts import save_artifacts
+from mlops_pipeline.modeling.save_best_model import save_best_model
 
 # We have the MLFlow pipeline saved in mlflow_utils. Let's import:
 from mlops_pipeline.utils.mlflow_utils import start_run, log_metrics
@@ -188,6 +189,18 @@ def train_models(
         )
 
         
+        best_model_path, best_model_type = save_best_model(
+                xgboost_model=best_model,
+                lr_model=best_model_lr,
+                xgboost_classification_report=report_test,
+                lr_classification_report=report_lr_test,
+                xgboost_model_path=xgboost_pkl_path,
+                lr_model_path=logreg_pkl_path,
+                printing=printing_bool
+            )
+        mlflow.log_artifact(str(best_model_path), artifact_path="model")
+        
+        logger.info(f"Best model ({best_model_type}) saved to: {best_model_path}")
         
 
     logger.success(f"Saved Logistic Regression model to: {logreg_pkl_path}")
