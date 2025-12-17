@@ -49,8 +49,8 @@ def load_X_y(X_path: Path, y_path: Path):
     Load features and single-column labels from CSV.
     Assumes index is in column 0; adjust index_col as needed.
     """
-    X = pd.read_csv(X_path, index_col=0)
-    y_df = pd.read_csv(y_path, index_col=None)
+    X = pd.read_csv(X_path)
+    y_df = pd.read_csv(y_path)
 
     if y_df.shape[1] != 1:
         raise ValueError(f"{y_path} must have exactly 1 column, got {y_df.shape[1]}")
