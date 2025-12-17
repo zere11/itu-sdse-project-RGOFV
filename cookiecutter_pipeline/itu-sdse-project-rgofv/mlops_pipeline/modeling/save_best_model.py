@@ -26,14 +26,15 @@ class RobustDataPreprocessor(BaseEstimator, TransformerMixin):
     """
     def __init__(self, expected_columns=None):
         self.expected_columns = expected_columns
-        self.feature_names_ = None
+        # Use simple attribute name to ensure persistence across sklearn versions
+        self.final_columns = None
         
     def fit(self, X, y=None):
         # Store expected feature names from training
         if self.expected_columns is not None:
-            self.feature_names_ = self.expected_columns
+            self.final_columns = self.expected_columns
         else:
-            self.feature_names_ = list(X.columns)
+            self.final_columns = list(X.columns)
         return self
     
     def transform(self, X):
@@ -99,11 +100,12 @@ class RobustDataPreprocessor(BaseEstimator, TransformerMixin):
             data[col] = pd.to_numeric(data[col], errors="coerce")
         
         # Ensure all expected columns are present, fill missing with 0
-        if self.feature_names_ is not None:
+        # Ensure all expected columns are present, fill missing with 0
+        if self.final_columns is not None:
              # Reindex guarantees that we have exactly the columns we expect, in order.
              # Any new columns (unexpected) are dropped.
              # Any missing columns (expected) are added with NaN (fill_value handles fill).
-             target_cols = self.feature_names_
+             target_cols = self.final_columns
              data = data.reindex(columns=target_cols, fill_value=0.0)
         
         return data
