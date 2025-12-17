@@ -13,10 +13,13 @@ from mlops_pipeline.config import INTERIM_DATA_DIR, PROCESSED_DATA_DIR, MODELS_D
 def build_features(training_csv_path: Path, out_processed_csv_path: Path, printing: bool = PRINTING_STATE) -> None:
     df = pd.read_csv(training_csv_path)
 
-    cont = df.select_dtypes(include=[np.number]).copy()
-    cat = df.select_dtypes(include=["object"]).copy()
-
-    df_feat = pd.concat([cat, cont], axis=1)
+    # Was incorrectly filtering out boolean columns!
+    # cont = df.select_dtypes(include=[np.number]).copy()
+    # cat = df.select_dtypes(include=["object"]).copy()
+    # df_feat = pd.concat([cat, cont], axis=1)
+    
+    # Just use the dataframe as is to avoid losing boolean columns like 'onboarding'
+    df_feat = df.copy()
 
     # binning
     mapping = {"li": "socials", "fb": "socials", "organic": "group1", "signup": "group1"}
