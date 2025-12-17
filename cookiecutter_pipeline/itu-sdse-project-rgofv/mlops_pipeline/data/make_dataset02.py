@@ -209,7 +209,8 @@ def make_dataset(raw_csv_path: Path, out_training_csv_path: Path, min_date: str,
             }
 
     data['bin_source'] = data['source'].map(mapping)
-
+    
+    (PROCESSED_DATA_DIR).mkdir(parents=True, exist_ok=True)
     data.to_csv(PROCESSED_DATA_DIR / 'train_data_gold.csv', index=False)
     
 
