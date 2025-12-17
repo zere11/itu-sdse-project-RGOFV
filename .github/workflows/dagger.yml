@@ -37,9 +37,9 @@ jobs:
       - name: Rename model
         run: |
           ls -al models || true
-          test -f models/lead_model_logreg.pkl || (echo "Model not found: models/lead_model_logreg.pkl" && exit 1)
-          cp models/lead_model_logreg.pkl models/model.pkl
-          ls -al models
+          test -f models/model.pkl || (echo "Model not found: models/model.pkl" && exit 1)
+          #cp models/lead_model_logreg.pkl models/model.pkl
+          #ls -al models
 
       - name: Validate model presence
         run: |
