@@ -149,7 +149,7 @@ def save_best_model(
     
     Args:
         xgboost_model: Trained XGBoost model object
-        lr_model: Trained Logistic Regression model object
+        lr_model: Trained Logistic Regression model object (can be a Pipeline)
         xgboost_classification_report: Classification report dict for XGBoost model
         lr_classification_report: Classification report dict for Logistic Regression model
         xgboost_model_path: Optional. Path to XGBoost model file (for copying if needed)
@@ -187,6 +187,7 @@ def save_best_model(
         # Compare and save the better model wrapped in a pipeline
         if xgb_f1_score >= lr_f1_score:
             # XGBoost is better or equal
+            # XGBoost model is a simple estimator, wrap with preprocessor
             pipeline = Pipeline([
                 ('preprocessor', preprocessor),
                 ('model', xgboost_model)
@@ -198,10 +199,28 @@ def save_best_model(
                 logger.info(f"Saved best model (XGBoost) with preprocessing pipeline to {output_path}")
         else:
             # Logistic Regression is better
-            pipeline = Pipeline([
-                ('preprocessor', preprocessor),
-                ('model', lr_model)
-            ])
+            # LR model from logreg.py is ALREADY a Pipeline with (imputer, logistic_regression)
+            # We need to extract the final estimator and rebuild the pipeline
+            if hasattr(lr_model, 'named_steps'):
+                # lr_model is a Pipeline - extract the trained logistic regression estimator
+                logger.info("[save_best_model] LR model is a Pipeline, extracting final estimator")
+                final_estimator = lr_model.named_steps['logistic_regression']
+                # Also extract the imputer to preserve the complete preprocessing
+                imputer = lr_model.named_steps['imputer']
+                
+                # Build new pipeline: RobustDataPreprocessor -> Imputer -> LogisticRegression
+                pipeline = Pipeline([
+                    ('preprocessor', preprocessor),
+                    ('imputer', imputer),
+                    ('logistic_regression', final_estimator)
+                ])
+            else:
+                # lr_model is a simple estimator
+                pipeline = Pipeline([
+                    ('preprocessor', preprocessor),
+                    ('model', lr_model)
+                ])
+            
             joblib.dump(pipeline, output_path)
             model_type = "Logistic Regression"
             if printing:
