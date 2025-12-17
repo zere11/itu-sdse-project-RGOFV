@@ -67,17 +67,19 @@ class DataPreprocessor(BaseEstimator, TransformerMixin):
             data['bin_source'] = data['bin_source'].fillna('group1')
         
         # Normalize onboarding
-        # In legacy 01_data.py, onboarding was object type.
-        # Here we force it to int 1/0 to align with training dummies (onboarding_1).
+        # We align with prepare.py which forces boolean -> onboarding_True
         if "onboarding" in data.columns:
-             # Handle various input types: boolean, string, int
+             # Handle various input types: boolean, string, int -> map to BOOL
              vals = {
-                 True: 1, False: 0, 
-                 "True": 1, "False": 0, "TRUE": 1, "FALSE": 0,
-                 "1": 1, "0": 0, 
-                 1: 1, 0: 0
+                 1: True, 0: False,
+                 "1": True, "0": False,
+                 "True": True, "False": False, "TRUE": True, "FALSE": False,
+                 True: True, False: False
              }
-             data["onboarding"] = data["onboarding"].map(vals).fillna(0).astype(int)
+             data["onboarding"] = data["onboarding"].map(vals).fillna(False).astype(bool)
+             
+             # Explicitly set categories to ensure 'True' category exists (matches prepare.py)
+             data["onboarding"] = data["onboarding"].astype(pd.CategoricalDtype(categories=[False, True], ordered=False))
 
         # Handle categorical columns - one-hot encode
         cat_cols = ["customer_group", "onboarding", "bin_source", "source"]

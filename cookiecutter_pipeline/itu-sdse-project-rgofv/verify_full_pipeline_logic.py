@@ -18,7 +18,7 @@ def test_full_pipeline_logic():
     # Let's assume the Training Data (X_train) looks like this:
     X_train_cols = [
         "age", 
-        "onboarding_1",  # The result of dummy encoding
+        "onboarding_True",  # The result of dummy encoding with bool
         "source_li", "source_organic", "source_signup", # bin_source dummies
         # country is NOT here because we dropped it in train.py!
         # wait, train.py loads X_train then drops it.
@@ -71,17 +71,17 @@ def test_full_pipeline_logic():
             sys.exit(1)
             
         # Check 2: Onboarding Normalization
-        # We expect 'onboarding_1' to be present and 1.0 (since input was True)
-        if "onboarding_1" not in cols:
-            print("FAIL: 'onboarding_1' missing. Normalization/Dummy encoding failed.")
-            # Did it generate onboarding_True?
-            if "onboarding_True" in cols:
-                print("FAIL: Generated 'onboarding_True' instead! Boolean handling failed.")
+        # We expect 'onboarding_True' to be present and 1.0 (since input was True)
+        # Because we switched to Boolean normalization in save_best_model.py
+        if "onboarding_True" not in cols:
+            print("FAIL: 'onboarding_True' missing. Boolean Normalization failed.")
+            if "onboarding_1" in cols:
+                print("FAIL: Generated 'onboarding_1' instead! Int normalization logic persisted?")
             sys.exit(1)
             
-        val_onboarding = X_out.iloc[0]["onboarding_1"]
+        val_onboarding = X_out.iloc[0]["onboarding_True"]
         if val_onboarding != 1.0:
-             print(f"FAIL: onboarding_1 value is {val_onboarding}, expected 1.0")
+             print(f"FAIL: onboarding_True value is {val_onboarding}, expected 1.0")
              sys.exit(1)
 
         # Check 3: Missing columns filled
