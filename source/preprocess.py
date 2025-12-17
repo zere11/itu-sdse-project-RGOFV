@@ -12,7 +12,6 @@ from helpers import describe_numeric_col, impute_missing_values
 
 
 def data_preparation(data, printing=False):
-    # ENTIRE original code from 01_data.py features section
     max_date = "2024-01-31"
     min_date = "2024-01-01"
 

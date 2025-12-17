@@ -1,12 +1,12 @@
 ## mathm: Helper functions.
 import subprocess
 import pandas as pd
-import os
+
 import datetime
 import json
 import warnings
 import numpy as np
-#from IPython.display import display
+#not using IPython.display import display as doesn't work well with docker windows
 from pprint import pprint
 
 from sklearn.preprocessing import MinMaxScaler
