@@ -72,25 +72,26 @@ def load_and_prepare_data(data_gold_path: Path, out_dir: Path, scaler_path: Path
     #non_numeric_cols = X.columns.difference(numeric_cols)
 
     # Let's create our MinMaxScaler here:
-    scaler = MinMaxScaler()
-    scaler.fit(X_train[numeric_cols])
+    # ACTUALLY NO CHANGES!! Scaler stays earlier in the workflow.
+    #scaler = MinMaxScaler()
+    #scaler.fit(X_train[numeric_cols])
 
     # We copy all data from the original X, then transform with the fitted scaler.
-    X_train_scaled = X_train.copy()
-    X_train_scaled[numeric_cols] = scaler.transform(X_train[numeric_cols])
+    #X_train_scaled = X_train.copy()
+    #X_train_scaled[numeric_cols] = scaler.transform(X_train[numeric_cols])
 
-    X_test_scaled = X_test.copy()
-    X_test_scaled[numeric_cols] = scaler.transform(X_test[numeric_cols])
+    #X_test_scaled = X_test.copy()
+    #X_test_scaled[numeric_cols] = scaler.transform(X_test[numeric_cols])
 
 
-    joblib.dump(value=scaler, filename=scaler_path)
+    #joblib.dump(value=scaler, filename=scaler_path)
 
     out_dir.mkdir(parents=True, exist_ok=True)
 
     # Write FOUR separate files
-    X_train_path = write_any(X_train_scaled, out_dir / "X_train.csv")
+    X_train_path = write_any(X_train, out_dir / "X_train.csv")
     y_train_path = write_any(y_train.to_frame(name="lead_indicator"), out_dir / "y_train.csv")
-    X_test_path  = write_any(X_test_scaled,  out_dir / "X_test.csv")
+    X_test_path  = write_any(X_test,  out_dir / "X_test.csv")
     y_test_path  = write_any(y_test.to_frame(name="lead_indicator"),  out_dir / "y_test.csv")
 
     if printing:
@@ -99,8 +100,8 @@ def load_and_prepare_data(data_gold_path: Path, out_dir: Path, scaler_path: Path
         print(f"  - {y_train_path}")
         print(f"  - {X_test_path}")
         print(f"  - {y_test_path}")
-        print(f"[prepare] Shapes: X_train={X_train_scaled.shape}, y_train={y_train.shape}, "
-              f"X_test={X_test_scaled.shape}, y_test={y_test.shape}")
+        print(f"[prepare] Shapes: X_train={X_train.shape}, y_train={y_train.shape}, "
+              f"X_test={X_test.shape}, y_test={y_test.shape}")
 
 
     return {
