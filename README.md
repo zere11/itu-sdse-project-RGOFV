@@ -6,8 +6,8 @@ A simplified, manual implementation of a machine learning pipeline using Dagger 
 
 ## Folder Structure
 
-├── source/ # Pipeline scripts
-│ ├── makedataset.py # Load raw data
+├── source/ # Pipeline scripts \n
+│ ├── makedataset.py # Load raw data \n
 │ ├── preprocess.py # Clean and prepare data
 │ ├── features.py # Feature engineering
 │ ├── train.py # Train models with MLflow
