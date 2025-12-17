@@ -24,10 +24,10 @@ A simplified, manual implementation of a machine learning pipeline using Dagger 
 ├── pipeline.go # Dagger pipeline definition                                             
 ├── requirements.txt # Python dependencies                                             
 └── README.md # You are here!                                             
-                                             
-This is a **naive implementation**:                                             
+                                                                                          
+This is a **naive implementation**:                                                                                          
 
-No DVC integration - data must be manually managed
-Manual cookiecutter-style pipeline (not fully automated)
-Minimal error handling
-mlflow not initiated
+No DVC integration - data must be manually managed                                                                                          
+Manual cookiecutter-style pipeline (not fully automated)                                                                                          
+Minimal error handling                                                                                          
+Mlflow not initiated                                                                                          
