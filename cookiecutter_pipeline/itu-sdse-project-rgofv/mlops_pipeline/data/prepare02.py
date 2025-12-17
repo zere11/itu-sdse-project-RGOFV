@@ -5,7 +5,6 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler
 import joblib
 
-from .io import write_any
 
 
 def create_dummy_cols(df, col):
@@ -50,6 +49,15 @@ def load_and_prepare_data(data_gold_path: Path, out_dir: Path, scaler_path: Path
 
     data = pd.concat([other_vars, cat_vars], axis=1)
 
+
+    # After dummies and concat with other_vars:
+    print("[prepare] Columns post-dummies:", sorted(data.columns))
+    assert "source_signup" in data.columns, "Missing source_signup after dummies"
+    assert "bin_source_group1" in data.columns, "Missing bin_source_group1 after dummies"
+    assert "onboarding_False" in data.columns, "Missing onboarding_False after dummies"
+    assert "customer_group_1" in data.columns, "Missing onboarding_False after dummies"
+
+
     for col in data:
         data[col] = data[col].astype("float64")
         if printing:
@@ -85,6 +93,11 @@ def load_and_prepare_data(data_gold_path: Path, out_dir: Path, scaler_path: Path
 
 
     #joblib.dump(value=scaler, filename=scaler_path)
+
+
+    for name, X_part in [("X_train", X_train), ("X_test", X_test)]:
+        print(f"Checking before CSV's: [prepare] {name} columns:", sorted(X_part.columns))
+
 
     out_dir.mkdir(parents=True, exist_ok=True)
 
