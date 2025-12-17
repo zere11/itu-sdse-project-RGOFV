@@ -4,7 +4,8 @@ from loguru import logger
 import subprocess
 
 
-from mlops_pipeline.data.prepare import load_and_prepare_data
+#from mlops_pipeline.data.prepare import load_and_prepare_data
+from mlops_pipeline.data.prepare02 import load_and_prepare_data
 from mlops_pipeline.features_cli import feature_app
 from mlops_pipeline.dataset import data_app
 from mlops_pipeline.config import RAW_DATA_DIR, INTERIM_DATA_DIR, PROCESSED_DATA_DIR, EXTERNAL_DATA_DIR, PRINTING_STATE, MODELS_DIR, BASE_DATA
