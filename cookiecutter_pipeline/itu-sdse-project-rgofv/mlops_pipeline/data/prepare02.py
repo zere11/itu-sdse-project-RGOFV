@@ -56,7 +56,7 @@ def load_and_prepare_data(data_gold_path: Path, out_dir: Path, scaler_path: Path
             print(f"Changed column {col} to float")
 
     y = data["lead_indicator"]
-    X = data.drop(["lead_indicator"], axis=1)
+    X = data.drop(["lead_indicator", "source_signup", "bin_source_group1", "onboarding_False", "customer_group_1"], axis=1)
 
 
     X_train, X_test, y_train, y_test = train_test_split(
