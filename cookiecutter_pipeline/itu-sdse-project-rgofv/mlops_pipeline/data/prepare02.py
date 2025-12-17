@@ -89,10 +89,15 @@ def load_and_prepare_data(data_gold_path: Path, out_dir: Path, scaler_path: Path
     out_dir.mkdir(parents=True, exist_ok=True)
 
     # Write FOUR separate files
-    X_train_path = write_any(X_train, out_dir / "X_train.csv")
-    y_train_path = write_any(y_train.to_frame(name="lead_indicator"), out_dir / "y_train.csv")
-    X_test_path  = write_any(X_test,  out_dir / "X_test.csv")
-    y_test_path  = write_any(y_test.to_frame(name="lead_indicator"),  out_dir / "y_test.csv")
+    X_train_path =  out_dir / "X_train.csv"
+    y_train_path =  out_dir / "y_train.csv"
+    X_test_path  =  out_dir / "X_test.csv"
+    y_test_path  =   out_dir / "y_test.csv"
+
+    X_train.to_csv(X_train_path)
+    y_train.to_csv(y_train_path)
+    X_test.to_csv(X_test_path) 
+    y_test.to_csv(y_test_path)
 
     if printing:
         print(f"[prepare] Saved:")
