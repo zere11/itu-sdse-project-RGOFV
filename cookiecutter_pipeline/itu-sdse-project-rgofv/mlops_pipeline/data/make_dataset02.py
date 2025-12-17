@@ -22,6 +22,7 @@ from mlops_pipeline.config import DATA_DIR, RAW_DATA_DIR, INTERIM_DATA_DIR, PRIN
 
 def describe_numeric_col(x: pd.Series) -> pd.Series:
     return pd.Series(
+
         [
             int(x.count()),
             int(x.isna().sum()),
@@ -71,9 +72,9 @@ def impute_missing_values(x: pd.Series, method: str = "mean") -> pd.Series:
   #      raise ValueError("Method must be either mean or median.")
 
    # if (x.dtype == "float64") | (x.dtype == "int64"):
-        x = x.fillna(x.mean()) if method=="mean" else x.fillna(x.median())
+        #x = x.fillna(x.mean()) if method=="mean" else x.fillna(x.median())
    # else:
-        x = x.fillna(x.mode()[0])
+        #x = x.fillna(x.mode()[0])
    # return x
 
 
