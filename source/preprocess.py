@@ -8,7 +8,7 @@ from pprint import pprint
 from sklearn.preprocessing import MinMaxScaler
 import joblib
 
-from utils.helpers import describe_numeric_col, impute_missing_values
+from helpers import describe_numeric_col, impute_missing_values
 
 
 def data_preparation(data, printing=False):
