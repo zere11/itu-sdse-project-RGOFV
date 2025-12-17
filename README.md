@@ -19,10 +19,7 @@ A simplified, manual implementation of a machine learning pipeline using Dagger 
 │ ├── raw_data.csv # Input data (must exist)
 │ ├── train_data_gold.csv # Processed data
 │ ├── model.pkl # Best model
-│ └── *.json, *.csv # Metrics and artifacts
-│
-├── mlflow/ # MLflow tracking
-│ └── (experiment runs)
+│ └── '...'.json, '...'.csv # Metrics and artifacts
 │
 ├── pipeline.go # Dagger pipeline definition
 ├── requirements.txt # Python dependencies
