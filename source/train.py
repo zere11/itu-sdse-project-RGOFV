@@ -28,6 +28,9 @@ from mlflow.entities.model_registry.model_version_status import ModelVersionStat
 from helpers import create_dummy_cols
 from wrappers import lr_wrapper
 
+# Set MLflow tracking URI to store runs in repo root mlflow directory
+mlflow.set_tracking_uri("file:///repo/mlflow")
+
 def wait_until_ready(model_name, model_version):
     client = MlflowClient()
     for _ in range(10):

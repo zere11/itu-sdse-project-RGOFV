@@ -82,12 +82,12 @@ func Build(ctx context.Context) error {
 		return err
 	}
 
-	// Step 5: Export artifacts and mlruns
+	// Step 5: Export artifacts and mlflow
 	fmt.Println("Exporting Artifacts and Data")
-	if _, err := train.Directory("/repo/source/artifacts").Export(ctx, "artifacts"); err != nil {
+	if _, err := train.Directory("/repo/artifacts").Export(ctx, "artifacts"); err != nil {
 		return err
 	}
-	if _, err := train.Directory("/repo/source/mlruns").Export(ctx, "mlruns"); err != nil {
+	if _, err := train.Directory("/repo/mlflow").Export(ctx, "mlflow"); err != nil {
 		return err
 	}
 
