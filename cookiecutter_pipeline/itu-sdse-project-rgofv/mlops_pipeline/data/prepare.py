@@ -51,6 +51,8 @@ def load_and_prepare_data(data_gold_path: Path, out_dir: Path, scaler_path: Path
         # This aligns with the remote validator which expects/produces onboarding_True
         if col == "onboarding":
              cat_vars[col] = cat_vars[col].astype(bool)
+             # Explicitly set categories to ensure 'True' category exists even if data is all False
+             cat_vars[col] = cat_vars[col].astype(pd.CategoricalDtype(categories=[False, True], ordered=False))
         
         cat_vars[col] = cat_vars[col].astype("category")
         cat_vars = create_dummy_cols(cat_vars, col)
