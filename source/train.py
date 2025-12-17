@@ -150,4 +150,4 @@ def train_logistic_regression_model(X_train, X_test, y_train, y_test, experiment
         joblib.dump(value=best_model, filename=lr_model_path)
         mlflow.pyfunc.log_model('model', python_model=lr_wrapper(best_model))
 
-    model_classification_report = classification_r_
+    model_classification_report = classification_report(y_test, y_pred_test)
