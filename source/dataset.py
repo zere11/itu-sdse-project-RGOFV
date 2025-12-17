@@ -1,17 +1,12 @@
 import os
 import pandas as pd
 from pathlib import Path
-import subprocess
 
 def data_extraction():
     """
     Load raw_data.csv from artifacts directory.
     When running from /repo/source, artifacts is at ../artifacts
     """
-    subprocess.run(
-        ["dvc","pull"],
-        check=True
-    )
     candidates = [
         os.path.join("../artifacts", "raw_data.csv"),                  # ../artifacts/raw_data.csv
         os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "artifacts", "raw_data.csv")),
