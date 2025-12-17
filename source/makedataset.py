@@ -2,8 +2,8 @@ import os
 import warnings
 import pandas as pd
 
-from data.dataset import data_extraction
-from data.preprocess import data_preparation
+from dataset import data_extraction
+from preprocess import data_preparation
 
 def main():
     os.makedirs("./artifacts", exist_ok=True)
