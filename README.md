@@ -2,7 +2,8 @@
 Welcome to the RGoOFV MLOps project repo! 
 Please note that this repo contains two workflow solutions, one using the Cookiecutter Data Science template with a CLI-implementation using Typer commands, and one using decomposed python scripts of the original Notebook, run through a Go pipeline.                                                                                  
 Both approaches create the necessary files and pass the validation check on git Workflow using an automated Dagger pipeline.                                                                                  
-## Project Organization                                                                                                
+## Project Organization   
+```
 ├──.github                                                                                                
     ├──workflows                                                                                                  
         ├── dagger.yml                                                                                               
@@ -74,7 +75,8 @@ Both approaches create the necessary files and pass the validation check on git 
 ├── go.sum                                                                                  
 ├── pipeline.go                                                                                  
 ├── README.md                                                                                  
-├── requirements.txt                                                                                  
+├── requirements.txt
+```                                                                              
                                                                                   
 Running pipeline:
 
