@@ -60,14 +60,16 @@ def train_models(
     X_test,  y_test  = load_X_y(X_test_path,  y_test_path)
 
     # Drop columns that are not used in inference (matching DataPreprocessor in save_best_model.py)
+    # Drop columns that are not used in inference (matching DataPreprocessor in save_best_model.py)
+    # This must match PRECISELY what DataPreprocessor drops.
     cols_to_drop = [
         "is_active", "marketing_consent", "first_booking", 
         "existing_customer", "last_seen", "domain", "country",
-        "visited_learn_more_before_booking", "visited_faq"
+        "visited_learn_more_before_booking", "visited_faq",
+        "lead_id", "customer_code", "date_part"
     ]
-    # Also ensure ID columns are gone if they somehow persisted (though prepare.py likely removed them)
-    cols_to_drop += ["lead_id", "customer_code", "date_part"]
     
+    # Prune dropped columns from X_train/X_test
     X_train = X_train.drop(columns=[c for c in cols_to_drop if c in X_train.columns])
     X_test = X_test.drop(columns=[c for c in cols_to_drop if c in X_test.columns])
 

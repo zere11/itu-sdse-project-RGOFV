@@ -66,13 +66,17 @@ class DataPreprocessor(BaseEstimator, TransformerMixin):
             # Fill any NaN values with 'group1' as default
             data['bin_source'] = data['bin_source'].fillna('group1')
         
-        # Normalize onboarding to ensure consistent dummy column names (onboarding_1 vs onboarding_True)
-        # We'll treat it as string '1'/'0' or just map boolean to int 1/0
+        # Normalize onboarding
+        # In legacy 01_data.py, onboarding was object type.
+        # Here we force it to int 1/0 to align with training dummies (onboarding_1).
         if "onboarding" in data.columns:
-             # Map booleans or strings to 0/1, then to string to match 'category' behavior if needed
-             # or simply ensure it matches training. 
-             # Assuming training had 0/1 (int/float).
-             vals = {True: 1, False: 0, "True": 1, "False": 0, "1": 1, "0": 0, 1: 1, 0: 0}
+             # Handle various input types: boolean, string, int
+             vals = {
+                 True: 1, False: 0, 
+                 "True": 1, "False": 0, "TRUE": 1, "FALSE": 0,
+                 "1": 1, "0": 0, 
+                 1: 1, 0: 0
+             }
              data["onboarding"] = data["onboarding"].map(vals).fillna(0).astype(int)
 
         # Handle categorical columns - one-hot encode
@@ -93,12 +97,11 @@ class DataPreprocessor(BaseEstimator, TransformerMixin):
         
         # Ensure all expected columns are present, fill missing with 0
         if self.feature_names_ is not None:
-            for col in self.feature_names_:
-                if col not in data.columns:
-                    data[col] = 0.0
-            
-            # Reorder columns to match expected order
-            data = data[self.feature_names_]
+             # Reindex guarantees that we have exactly the columns we expect, in order.
+             # Any new columns (unexpected) are dropped.
+             # Any missing columns (expected) are added with NaN (fill_value handles fill).
+             target_cols = self.feature_names_
+             data = data.reindex(columns=target_cols, fill_value=0.0)
         
         return data
 
