@@ -9,7 +9,7 @@ on:
       - workflow-fix
       - dagger
       - cookiecutter02
-      - cookiecutter04
+      - cookiecutter_04
 
 jobs:
   train:
