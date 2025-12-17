@@ -10,9 +10,9 @@ A simplified, manual implementation of a machine learning pipeline using Dagger 
 │ ├── makedataset.py # Load raw data                                             
 │ ├── preprocess.py # Clean and prepare data                                             
 │ ├── features.py # Feature engineering                                             
-│ ├── train.py # Train models with MLflow                                             
+│ ├── train.py # Train models                                             
 │ ├── helpers.py # Utility functions                                             
-│ ├── wrappers.py # MLflow model wrappers                                             
+│ ├── wrappers.py # Model wrappers                                             
 │ └── dataset.py # Data loading                                             
 │                                             
 ├── artifacts/ # Input data & outputs                                             
@@ -23,7 +23,7 @@ A simplified, manual implementation of a machine learning pipeline using Dagger 
 │                                             
 ├── pipeline.go # Dagger pipeline definition                                             
 ├── requirements.txt # Python dependencies                                             
-└── README.md # This file                                             
+└── README.md # You are here!                                             
                                              
 This is a **naive implementation**:                                             
 
