@@ -3,7 +3,7 @@ name: Run Dagger Pipeline
 on:
   workflow_dispatch:
   push:
-    branches:
+    branch:
       - cookiecutter-pipeline
 
 jobs:

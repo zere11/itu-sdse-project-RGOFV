@@ -32,13 +32,16 @@ func Build(ctx context.Context) error {
 	// Persistent pip cache to speed up installs across runs
 	pipCache := client.CacheVolume("pip-cache")
 
-	// Base container (first stage): install requirements using ONLY requirements.txt
+	// Base container (first stage): install requirements
 	base := client.Container().
 		From("python:3.12.2-bookworm").
 		WithMountedCache("/root/.cache/pip", pipCache).
-		WithEnvVariable("PIP_DISABLE_PIP_VERSION_CHECK", "1")
+		WithEnvVariable("PIP_DISABLE_PIP_VERSION_CHECK", "1").
+		WithDirectory("/repo", repo).
+		WithWorkdir("/repo/source").
+		WithExec([]string{"python", "--version"})
 
-	// Copy requirements.txt and install; this layer will cache by the file content
+	// Install requirements
 	req := repo.File("requirements.txt")
 	base = base.
 		WithFile("/tmp/requirements.txt", req).
@@ -47,33 +50,44 @@ func Build(ctx context.Context) error {
 			"python -m pip install --upgrade pip && python -m pip install -r /tmp/requirements.txt",
 		})
 
-	// Now mount the full repo and switch to /repo/notebooks
-	base = base.
-		WithDirectory("/repo", repo).
-		WithWorkdir("/repo/notebooks").
-		WithExec([]string{"python", "--version"})
-
 	if _, err := base.Stdout(ctx); err != nil {
 		return err
 	}
 
-	fmt.Println("Initializing data loading and preprocessing")
-	dataPrep := base.WithExec([]string{"python", "01_data.py"})
-	if _, err := dataPrep.Stdout(ctx); err != nil {
+	// Step 1: Dataset creation
+	fmt.Println("Initializing dataset creation")
+	dataset := base.WithExec([]string{"python", "makedataset.py"})
+	if _, err := dataset.Stdout(ctx); err != nil {
 		return err
 	}
 
+	// Step 2: Preprocessing
+	fmt.Println("Initializing preprocessing")
+	preprocess := dataset.WithExec([]string{"python", "preprocess.py"})
+	if _, err := preprocess.Stdout(ctx); err != nil {
+		return err
+	}
+
+	// Step 3: Feature engineering
+	fmt.Println("Initializing feature engineering")
+	features := preprocess.WithExec([]string{"python", "features.py"})
+	if _, err := features.Stdout(ctx); err != nil {
+		return err
+	}
+
+	// Step 4: Training
 	fmt.Println("Initializing training and registration")
-	train := dataPrep.WithExec([]string{"python", "02_model.py"})
+	train := features.WithExec([]string{"python", "train.py"})
 	if _, err := train.Stdout(ctx); err != nil {
 		return err
 	}
 
-	fmt.Println("Exporing Artifacts and Data")
-	if _, err := train.Directory("/repo/notebooks/artifacts").Export(ctx, "artifacts"); err != nil {
+	// Step 5: Export artifacts and mlruns
+	fmt.Println("Exporting Artifacts and Data")
+	if _, err := train.Directory("/repo/source/artifacts").Export(ctx, "artifacts"); err != nil {
 		return err
 	}
-	if _, err := train.Directory("/repo/notebooks/mlruns").Export(ctx, "mlruns"); err != nil {
+	if _, err := train.Directory("/repo/source/mlruns").Export(ctx, "mlruns"); err != nil {
 		return err
 	}
 

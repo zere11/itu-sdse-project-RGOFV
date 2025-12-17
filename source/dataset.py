@@ -1,32 +1,30 @@
-"""
-Dataset loading utilities.
+from pathlib import Path
 
-This module contains the raw data extraction logic exactly as implemented
-in the original 01_data.py.
-"""
+# Project root
+# Goes up one level to parent directory from where config file is stored
+PROJ_ROOT = Path(__file__).resolve().parents[1]
 
-import os
-import pandas as pd
+# Directories
+ARTIFACTS_DIR = PROJ_ROOT / "artifacts"
+DATA_DIR = PROJ_ROOT / "data"
 
+# Files
+RAW_DATA_FILE = DATA_DIR / "raw_data.csv"
+DATE_LIMITS_FILE = ARTIFACTS_DIR / "date_limits.json"
+OUTLIER_SUMMARY_FILE = ARTIFACTS_DIR / "outlier_summary.csv"
+CAT_MISSING_IMPUTE_FILE = ARTIFACTS_DIR / "cat_missing_impute.csv"
+SCALER_FILE = ARTIFACTS_DIR / "scaler.pkl"
+COLUMNS_DRIFT_FILE = ARTIFACTS_DIR / "columns_drift.json"
+TRAINING_DATA_FILE = DATA_DIR / "training_data.csv"
+TRAIN_GOLD_FILE = DATA_DIR / "train_data_gold.csv"
+XGBOOST_MODEL_FILE = ARTIFACTS_DIR / "lead_model_xgboost.json"
+LR_MODEL_FILE = ARTIFACTS_DIR / "lead_model_lr.pkl"
+COLUMNS_LIST_FILE = ARTIFACTS_DIR / "columns_list.json"
+MODEL_RESULTS_FILE = ARTIFACTS_DIR / "model_results.json"
+X_TEST_FILE = DATA_DIR / "X_test.csv"
+Y_TEST_FILE = DATA_DIR / "y_test.csv"
+DATE_FILTERED_DATA_FILE = DATA_DIR / "date_filtered_data.csv"
 
-def data_extraction():
-    """
-    Look for raw_data.csv without using DVC.
-    We run from /repo/notebooks, so the correct local path is:
-      - ./artifacts/raw_data.csv
-    Also allow:
-      - ../artifacts/raw_data.csv  (repo root artifacts)
-      - RAW_DATA_PATH env var (absolute override)
-    """
-
-    cwd = os.getcwd()  # should be /repo/notebooks
-    candidates = [
-        os.path.join(cwd, "artifacts", "raw_data.csv"),                # ./artifacts/raw_data.csv
-        os.path.abspath(os.path.join(cwd, "..", "artifacts", "raw_data.csv")),  # ../artifacts/raw_data.csv
-        os.environ.get("RAW_DATA_PATH", ""),                           # optional absolute path
-    ]
-
-    for path in candidates:
-        if path and os.path.exists(path):
-            print(f"✓ Loading data from: {path}")
-            return pd.read_csv(path)
+# MLFlow registry
+MLRUNS_DIR = PROJ_ROOT / "mlruns"
+MLRUNS_TRASH_DIR = MLRUNS_DIR / ".trash"
